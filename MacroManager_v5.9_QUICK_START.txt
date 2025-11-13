@@ -1,0 +1,156 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                   MACROMANAGER v5.9 - QUICK START                         ║
+║                   Script Export Fix & Diagnostics                         ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ THE PROBLEM YOU HAD                                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+  "CSV file and Script are created but when i ran script 
+   no response from autocad Electrical"
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ THE FIX APPLIED                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+  ✓ Script file format corrected (multi-line WBLOCK commands)
+  ✓ Comprehensive diagnostics added (see every step)
+  ✓ Detailed error messages (know exactly what failed)
+  ✓ Progress indicators (STEP 1/6 through STEP 6/6)
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ HOW TO USE (QUICK VERSION)                                                │
+└───────────────────────────────────────────────────────────────────────────┘
+  1. APPLOAD → MacroManager_v5.9.lsp → Load
+  2. MACROMANAGER
+  3. SELECT BLOCKS → Choose blocks
+  4. Set Type (dropdown)
+  5. Export Method: Script
+  6. Browse Block Library folder
+  7. Browse CSV save location
+  8. START EXPORT
+  9. READ COMMAND LINE (shows progress)
+  10. SCRIPT → Select export_blocks.scr → OK
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ WHAT YOU'LL SEE NOW (Command Line)                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+  >>> [STEP 1/6] Validating Export Parameters...
+  >>> ✓ CSV Path validated
+  >>> ✓ Block Library path validated
+  >>> ✓ Blocks selected: 3
+  
+  >>> [STEP 2/6] Creating Export Folders...
+  >>> ✓ Folder exists
+  
+  >>> [STEP 3/6] Opening Export Files...
+  >>> ✓ Script file opened
+  >>> ✓ CSV file opened
+  
+  >>> [STEP 4/6] Writing CSV Header...
+  >>> ✓ Header written
+  
+  >>> [STEP 5/6] Processing Selected Blocks...
+  >>> [1/3] Processing: block01
+      ✓ CSV entry written
+      ✓ Script commands added
+  >>> [2/3] Processing: block02
+      ✓ CSV entry written
+      ✓ Script commands added
+  >>> [3/3] Processing: block03
+      ✓ CSV entry written
+      ✓ Script commands added
+  
+  >>> [STEP 6/6] Finalizing Export...
+  >>> ✓ CSV file closed
+  >>> ✓ Script file closed
+  
+  >>> EXPORT SUMMARY
+  >>> Successful Exports: 3
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ SCRIPT FILE FORMAT (Fixed!)                                               │
+└───────────────────────────────────────────────────────────────────────────┘
+  OLD (Broken):
+    -WBLOCK "C:\path\block.dwg" = BlockName
+  
+  NEW (Working):
+    -WBLOCK
+    "C:\path\block.dwg"
+    
+    =BlockName
+    
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ FILES YOU HAVE                                                            │
+└───────────────────────────────────────────────────────────────────────────┘
+  ✓ MacroManager_v5.9.lsp (61 KB, 1,282 lines) - Main program
+  ✓ MacroManager_v5.9.dcl (6.3 KB) - Dialog interface
+  ✓ MacroManager_v5.9_README.txt - Installation guide
+  ✓ MacroManager_DIAGNOSTICS_GUIDE.txt - Detailed troubleshooting
+  ✓ MacroManager_v5.9_CHANGES_SUMMARY.txt - What changed & why
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING QUICK CHECK                                               │
+└───────────────────────────────────────────────────────────────────────────┘
+  Problem: No diagnostics shown
+    → Reload MacroManager_v5.9.lsp (old version loaded)
+  
+  Problem: Export fails early
+    → Check command line for ✗ FAILED messages
+    → Follow the error instructions
+  
+  Problem: CSV created but no script file
+    → Check folder permissions
+    → Look for "Failed to create script file" message
+  
+  Problem: Script runs but no DWG files
+    → Check command line during SCRIPT execution
+    → Look for "Block not found" errors
+    → AutoCAD crash = WBLOCK bug (not fixable)
+  
+  Problem: Still no response when running SCRIPT
+    → Open export_blocks.scr in Notepad
+    → Should see -WBLOCK on separate lines
+    → Paths should be in quotes
+    → Blank lines should exist
+    → If format is wrong, re-export with v5.9
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ SUCCESS INDICATORS                                                        │
+└───────────────────────────────────────────────────────────────────────────┘
+  During Export:
+    ✓ All 6 steps complete with checkmarks
+    ✓ "EXPORT SUMMARY" shows success count
+    ✓ Dialog appears with next steps
+  
+  Files Created:
+    ✓ CSV file exists and has data
+    ✓ export_blocks.scr exists in Block Library
+    ✓ Script has multi-line WBLOCK commands
+  
+  During SCRIPT execution:
+    ✓ Command line shows -WBLOCK executing
+    ✓ See file paths being processed
+    ✓ See "Source object: =BlockName"
+    ✓ DWG files appear in folder
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│ NEXT STEPS                                                                │
+└───────────────────────────────────────────────────────────────────────────┘
+  1. Load the updated MacroManager_v5.9.lsp
+  2. Run MACROMANAGER command
+  3. Export some blocks
+  4. WATCH THE COMMAND LINE - you'll see detailed progress
+  5. Run the generated script: SCRIPT → export_blocks.scr
+  6. Check if DWG files are created
+  
+  If everything works → Problem solved! ✓✓✓
+  If still issues → Command line will show EXACTLY where it fails
+  
+  Read MacroManager_DIAGNOSTICS_GUIDE.txt for detailed troubleshooting.
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║  The script format has been fixed. You should now see WBLOCK commands    ║
+║  executing when you run the script. Watch the command line for detailed  ║
+║  progress information that will help identify any remaining issues.      ║
+╚═══════════════════════════════════════════════════════════════════════════╝

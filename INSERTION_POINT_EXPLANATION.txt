@@ -1,0 +1,240 @@
+═══════════════════════════════════════════════════════════════════════════
+  INSERTION POINT vs BLOCK BASE POINT - CLARIFICATION
+  MacroManager v5.10 - How It Works
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 YOUR REQUIREMENT:
+  "I need to select the insertion point during block selection so that 
+   I can reinsert the exported block during import process."
+
+✅ GOOD NEWS: THIS IS ALREADY IMPLEMENTED!
+
+═══════════════════════════════════════════════════════════════════════════
+HOW IT WORKS CURRENTLY
+═══════════════════════════════════════════════════════════════════════════
+
+DURING EXPORT:
+  ──────────────────────────────────────────────────────────────────────
+  1. You select blocks in the drawing
+  
+  2. MacroManager captures for EACH block:
+     • Block name
+     • Insertion point (X, Y, Z) ← WHERE it was placed in drawing
+     • Block type/category
+     • Color, linetype
+  
+  3. This data is saved to CSV:
+     Block Name,X,Y,Z,Type,Color,Linetype
+     MyBlock,100.5,200.3,0.0,Power,256,ByLayer
+     
+  4. Block definition is exported to DWG file (contains block geometry)
+  ──────────────────────────────────────────────────────────────────────
+
+DURING IMPORT:
+  ──────────────────────────────────────────────────────────────────────
+  1. MacroManager reads CSV file
+  
+  2. For each row:
+     • Loads block definition from DWG file
+     • Inserts block at (X, Y, Z) from CSV ← Original position restored
+     • Applies type, color, linetype
+  
+  3. Result: Blocks are placed exactly where they were originally
+  ──────────────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════════════════
+UNDERSTANDING THE DIFFERENCE
+═══════════════════════════════════════════════════════════════════════════
+
+There are TWO different "points" involved:
+
+1. BLOCK BASE POINT (Internal to block definition)
+   ────────────────────────────────────────────────────────────────────
+   • Defined when block was originally created
+   • Stored inside the block definition
+   • Usually (0,0,0) within the block's own coordinate system
+   • This is the "grip point" of the block
+   • WBLOCK exports this automatically
+   
+   Example: If you created a block called "Motor" with base point
+   at the center of a circle, that base point is saved in the 
+   block definition.
+
+2. INSERTION POINT (Where block is placed in drawing)
+   ────────────────────────────────────────────────────────────────────
+   • The actual X,Y,Z coordinates in the drawing
+   • Where you clicked to place the block
+   • Different for each instance of the same block
+   • THIS is what MacroManager records in CSV
+   
+   Example: You insert "Motor" block at position (500, 300, 0)
+   in your electrical panel drawing. This (500, 300, 0) is the
+   insertion point.
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT MACROMANAGER DOES
+═══════════════════════════════════════════════════════════════════════════
+
+✅ CAPTURES INSERTION POINT (Already working!)
+  ──────────────────────────────────────────────────────────────────────
+  Code in mm:select_all_blocks (line 523):
+  
+  (setq base_pt (cdr (assoc 10 ent)))
+  
+  This gets the insertion point from DXF code 10, which is the
+  position where the block was inserted in the drawing.
+  
+  Stored in: *selected_blocks* list
+  Saved to: CSV file (X, Y, Z columns)
+  ──────────────────────────────────────────────────────────────────────
+
+✅ EXPORTS BLOCK DEFINITION (Already working!)
+  ──────────────────────────────────────────────────────────────────────
+  WBLOCK command exports the block definition with its original
+  base point intact.
+  
+  Script format:
+  -WBLOCK
+  "C:\path\BlockName.dwg"
+  =BlockName
+  
+  This exports the complete block definition.
+  ──────────────────────────────────────────────────────────────────────
+
+✅ REIMPORTS AT ORIGINAL POSITION (Already working!)
+  ──────────────────────────────────────────────────────────────────────
+  Code in mm:import_blocks_from_dwg (line 1160):
+  
+  (command "._INSERT" dwg_file (list x y z) "" "" "")
+  
+  This inserts the block at the X,Y,Z coordinates from CSV,
+  which are the original insertion points.
+  ──────────────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════════════════
+EXAMPLE WORKFLOW
+═══════════════════════════════════════════════════════════════════════════
+
+SCENARIO: You have a "MOTOR" block placed at position (1000, 500, 0)
+
+STEP 1: EXPORT
+  ──────────────────────────────────────────────────────────────────────
+  MacroManager finds block instance
+  Reads insertion point: (1000, 500, 0)
+  Saves to CSV:
+    MOTOR,1000.0000,500.0000,0.0000,Power,256,ByLayer
+  
+  Exports block definition to: MOTOR.dwg
+  (Contains block geometry with its internal base point)
+  ──────────────────────────────────────────────────────────────────────
+
+STEP 2: IMPORT (on different drawing or computer)
+  ──────────────────────────────────────────────────────────────────────
+  MacroManager reads CSV: MOTOR at (1000, 500, 0)
+  Loads MOTOR.dwg
+  Inserts at (1000, 500, 0)
+  
+  Result: MOTOR block is placed at EXACT SAME POSITION
+  ──────────────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════════════════
+WHY WBLOCK SHOULD NOT ASK FOR BASE POINT
+═══════════════════════════════════════════════════════════════════════════
+
+When exporting a block definition with WBLOCK:
+
+WRONG METHOD (what was happening before):
+  ────────────────────────────────────────────────────────────────────
+  -WBLOCK → asks for base point → creates NEW block from objects
+  
+  This is for creating a NEW block, not exporting existing one.
+  If you specify a base point, you're redefining the block's
+  internal base point, which will mess up the insertion.
+  ────────────────────────────────────────────────────────────────────
+
+CORRECT METHOD (what we do now):
+  ────────────────────────────────────────────────────────────────────
+  -WBLOCK → =BlockName → exports existing block definition
+  
+  This exports the block with its ORIGINAL base point intact.
+  No need to specify base point because it's already defined.
+  ────────────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════════════════
+VERIFICATION
+═══════════════════════════════════════════════════════════════════════════
+
+To verify insertion points are being captured:
+
+1. EXPORT A BLOCK:
+   ────────────────────────────────────────────────────────────────────
+   Select a block in your drawing
+   Note its position (select it and check properties)
+   Export it with MacroManager
+   ────────────────────────────────────────────────────────────────────
+
+2. CHECK CSV FILE:
+   ────────────────────────────────────────────────────────────────────
+   Open the CSV in Notepad or Excel
+   Look at the X, Y, Z columns
+   They should match the position you noted
+   ────────────────────────────────────────────────────────────────────
+
+3. IMPORT THE BLOCK:
+   ────────────────────────────────────────────────────────────────────
+   Delete the original block
+   Run import
+   Check if block appears at same position
+   ────────────────────────────────────────────────────────────────────
+
+═══════════════════════════════════════════════════════════════════════════
+IF YOU WANT TO MANUALLY SPECIFY INSERTION POINT
+═══════════════════════════════════════════════════════════════════════════
+
+If you want to MANUALLY pick insertion points during selection
+(instead of using the existing insertion points), that would be
+a DIFFERENT feature:
+
+CURRENT BEHAVIOR:
+  • Uses existing insertion points from placed blocks
+  • Automatic - no user input needed
+  • Blocks re-inserted at exact original positions
+
+ALTERNATIVE (if you want):
+  • Ask user to pick insertion point for each block during selection
+  • Manual - user clicks where they want each block
+  • Blocks inserted at user-specified positions (not original)
+
+DO YOU WANT THIS ALTERNATIVE BEHAVIOR?
+
+═══════════════════════════════════════════════════════════════════════════
+SUMMARY
+═══════════════════════════════════════════════════════════════════════════
+
+QUESTION: "I need to select the insertion point during block selection"
+
+ANSWER: MacroManager ALREADY captures insertion points automatically!
+
+HOW IT WORKS:
+  ✓ Export: Reads insertion point from block instance (X,Y,Z)
+  ✓ Export: Saves to CSV file
+  ✓ Export: Exports block definition (with original base point)
+  ✓ Import: Reads X,Y,Z from CSV
+  ✓ Import: Inserts block at recorded position
+
+RESULT:
+  Blocks are re-inserted at their EXACT original positions
+
+NO USER INPUT NEEDED:
+  Insertion points are captured automatically from existing blocks
+
+WBLOCK SHOULD NOT ASK FOR BASE POINT:
+  Block definition already has its base point
+  We only need to record where it was INSERTED (already done)
+
+═══════════════════════════════════════════════════════════════════════════
+
+If you want DIFFERENT behavior (manual insertion point selection),
+please clarify and I can modify the code accordingly.
+
+═══════════════════════════════════════════════════════════════════════════

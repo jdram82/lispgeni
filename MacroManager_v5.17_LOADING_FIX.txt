@@ -1,0 +1,104 @@
+# MacroManager v5.17 - Loading Error Fix
+
+## 🐛 Bug Found and Fixed
+
+### **Error During Load:**
+```
+; error: no function definition: MM:DETECT_PLATFORM
+_$
+```
+
+### **Root Cause:**
+The platform detection function was being **called before it was defined**.
+
+**Line 73 (OLD):**
+```lisp
+;; Platform detection
+(if (not *cad_platform*) (setq *cad_platform* (mm:detect_platform)))
+
+;; Function defined AFTER the call (line 80)
+(defun mm:detect_platform (/ acadver product)
+  ...
+)
+```
+
+### **Fix Applied:**
+Moved the function call **after** the function definition.
+
+**NEW Order:**
+```lisp
+;; Lines 67-72: Global variable initialization
+(if (not *selected_blocks*) (setq *selected_blocks* (list)))
+(if (not *selection_mode*) (setq *selection_mode* "single"))
+...
+
+;; Lines 74-88: Define function FIRST
+(defun mm:detect_platform (/ acadver product)
+  (setq acadver (getvar "ACADVER"))
+  (setq product (getvar "PRODUCT"))
+  (cond
+    ((wcmatch (strcase product) "*BRICSCAD*") "BRICSCAD")
+    ((wcmatch (strcase product) "*ELECTRICAL*") "ACADE")
+    ((wcmatch (strcase product) "*AUTOCAD*") "AUTOCAD")
+    (T "UNKNOWN")
+  )
+)
+
+;; Line 90: Call function AFTER it's defined
+(if (not *cad_platform*) (setq *cad_platform* (mm:detect_platform)))
+```
+
+---
+
+## ✅ Resolution
+
+**Status:** FIXED ✓
+
+**File Updated:** `MacroManager_v5.17.lsp`
+
+**Test Result:**
+```lisp
+Command: (load "MacroManager_v5.17.lsp")
+; Expected output:
+; ╔═══════════════════════════════════════════════════════════╗
+; ║  ✓ MacroManager v5.17 loaded!                           ║
+; ...
+; >>> Detected Platform: ACADE
+```
+
+---
+
+## 🧪 Testing Instructions
+
+### **In AutoCAD Electrical:**
+1. Open AutoCAD Electrical 2024
+2. Type: `(load "MacroManager_v5.17.lsp")`
+3. Should load without errors
+4. Should show: `>>> Detected Platform: ACADE`
+5. Run: `MACROMANAGER`
+6. Dialog should appear
+
+### **Verification:**
+```lisp
+Command: !*cad_platform*
+Expected: "ACADE"
+```
+
+---
+
+## 📝 Notes
+
+**Why this happened:**
+- Function was added in v5.17 for platform detection
+- Initial placement was before the function definition
+- AutoLISP requires functions to be defined before they're called
+
+**Prevention:**
+- All function definitions should be placed before any calls
+- Global variable initialization should call functions only after they're defined
+
+---
+
+**Date Fixed:** November 12, 2025  
+**Version:** v5.17 (corrected)  
+**Status:** Ready for testing ✅

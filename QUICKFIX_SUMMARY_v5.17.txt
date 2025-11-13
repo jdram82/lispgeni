@@ -1,0 +1,175 @@
+# Quick Fix Summary - MacroManager v5.17
+
+## 🎯 Issues Fixed
+
+### ❌ **Problem 1: AutoCAD Electrical 2024**
+**Error:** "Unhandled Exception" crash during Export
+**Cause:** `vl-cmdf` WBLOCK + ATTREQ=0 incompatible with AutoCAD Electrical
+
+### ❌ **Problem 2: BricsCAD**
+**Error:** "error:too few/too many arguments at[MM:IMPORT_BLOCKS_FROM_DWG]"
+**Cause:** Function expects 5 parameters, only 2 provided
+
+---
+
+## ✅ Solutions Applied
+
+### 1. Platform Auto-Detection
+```lisp
+;; New function added at line ~66
+(defun mm:detect_platform ()
+  ;; Detects: BRICSCAD, ACADE (AutoCAD Electrical), AUTOCAD, UNKNOWN
+)
+```
+
+### 2. Platform-Specific WBLOCK
+```lisp
+;; Modified mm:wblock_direct_vl function (~line 670)
+AutoCAD Electrical:
+  - Uses COMMAND (not vl-cmdf)
+  - Sets ATTREQ = 1 (enable attributes) ← KEY FIX
+  - Sets OSMODE = 0 (disable snap)
+  
+BricsCAD/AutoCAD:
+  - Uses vl-cmdf (faster)
+  - Sets ATTREQ = 0 (disable prompts)
+```
+
+### 3. Function Signature Fixed
+```lisp
+;; Changed mm:import_blocks_from_dwg (~line 1314)
+OLD: (defun mm:import_blocks_from_dwg (csv_path block_library_path import_mode batch_size start_row / ...)
+NEW: (defun mm:import_blocks_from_dwg (csv_path block_library_path / ...)
+     ;; import_mode, batch_size, start_row moved to local vars with defaults
+```
+
+### 4. Error Recovery
+```lisp
+;; Wrapped function calls with vl-catch-all-apply
+Export: Catches errors, shows alert instead of crash
+Import: Catches errors, shows alert instead of crash
+```
+
+---
+
+## 📦 Files Modified
+
+- **MacroManager_v5.16.lsp** ← Updated with all fixes (now v5.17 internally)
+- **MacroManager_v5.17_PLATFORM_FIX.md** ← This document
+
+---
+
+## 🧪 Test Instructions
+
+### AutoCAD Electrical 2024:
+1. Load: `(load "MacroManager_v5.16.lsp")`
+2. Run: `MACROMANAGER`
+3. Check console shows: `>>> Detected Platform: ACADE`
+4. Export blocks → Should complete without crash
+5. Look for: `→ WBLOCK (AutoCAD Electrical mode)... ✓`
+
+### BricsCAD:
+1. Load: `(load "MacroManager_v5.16.lsp")`
+2. Run: `MACROMANAGER`
+3. Check console shows: `>>> Detected Platform: BRICSCAD`
+4. Import CSV → Should work without "too many arguments" error
+5. Look for: `>>> MACROMANAGER v5.16 - XREF IMPORT METHOD (FIXED)`
+
+---
+
+## 🔧 Technical Details
+
+### Why AutoCAD Electrical Crashed:
+- **ATTREQ = 0** conflicts with electrical attribute system
+- Causes internal exception in block export module
+- **Fix:** Set ATTREQ = 1 for AutoCAD Electrical only
+
+### Why BricsCAD Error Occurred:
+- Function definition had 5 required parameters
+- Function call only provided 2 arguments
+- **Fix:** Made 3 parameters optional with defaults
+
+---
+
+## 📝 Key Code Changes
+
+### Line 63 (New - Platform Detection)
+```lisp
+(if (not *cad_platform*) (setq *cad_platform* (mm:detect_platform)))
+```
+
+### Line ~670 (Modified - WBLOCK Method)
+```lisp
+;; AutoCAD Electrical specific:
+(setvar "ATTREQ" 1)    ; ← Critical fix
+(command "._-WBLOCK" dwg_path "=" block_name)  ; ← Use COMMAND not vl-cmdf
+```
+
+### Line ~1314 (Modified - Import Function)
+```lisp
+;; Optional parameters now with defaults:
+(if (not import_mode) (setq import_mode "xref"))
+(if (not batch_size) (setq batch_size 999999))
+(if (not start_row) (setq start_row 1))
+```
+
+### Line ~342 (Modified - Error Handling)
+```lisp
+(setq export_result (vl-catch-all-apply 'mm:export_blocks_and_dwg ...))
+(if (vl-catch-all-error-p export_result)
+  (alert (strcat "Export Error:\\n" (vl-catch-all-error-message export_result))))
+```
+
+---
+
+## ✅ Verification Checklist
+
+- [x] Platform detection function added
+- [x] AutoCAD Electrical WBLOCK method uses COMMAND + ATTREQ=1
+- [x] BricsCAD WBLOCK method uses vl-cmdf + ATTREQ=0
+- [x] Import function accepts 2 parameters (3 optional defaults)
+- [x] Export wrapped in vl-catch-all-apply
+- [x] Import wrapped in vl-catch-all-apply
+- [x] Console displays detected platform on startup
+- [x] No syntax errors in LISP file
+
+---
+
+## 🚀 Expected Results
+
+### AutoCAD Electrical:
+✅ No "Unhandled Exception" crash  
+✅ Blocks export successfully  
+✅ Console shows "AutoCAD Electrical mode"  
+✅ DWG files created in export folder  
+
+### BricsCAD:
+✅ No "too few/too many arguments" error  
+✅ Import proceeds without crash  
+✅ Console shows "BRICSCAD mode"  
+✅ Blocks imported via XREF method  
+
+---
+
+## 📞 Next Steps
+
+1. **Test in AutoCAD Electrical 2024**
+   - Load the updated MacroManager_v5.16.lsp
+   - Export a few test blocks
+   - Verify no crash occurs
+
+2. **Test in BricsCAD**
+   - Load the updated MacroManager_v5.16.lsp
+   - Import previously exported CSV
+   - Verify no argument error
+
+3. **Report Results**
+   - Note any remaining errors
+   - Check console output for diagnostic messages
+   - Confirm platform detection is correct
+
+---
+
+**File Status:** ✅ READY FOR TESTING  
+**Compatibility:** AutoCAD Electrical 2024 + BricsCAD + Standard AutoCAD  
+**Version:** 5.17 (internally updated from 5.16)

@@ -1,0 +1,263 @@
+═══════════════════════════════════════════════════════════════════════════
+   MACRO MANAGER v5.16 - CRASH RECOVERY GUIDE
+═══════════════════════════════════════════════════════════════════════════
+
+⚠ ERROR: "Unhandled Exception c0000027 at address..."
+
+This is an AUTOCAD CRASH, not a LISP error. LISP cannot prevent it.
+
+═══════════════════════════════════════════════════════════════════════════
+🔍 WHAT CAUSES THIS ERROR?
+═══════════════════════════════════════════════════════════════════════════
+
+1. **CORRUPTED BLOCK** (most common)
+   └─ Block definition contains invalid entities
+   └─ Nested blocks with circular references
+   └─ XREFs embedded in block definition
+   └─ Bad geometry (invalid curves, surfaces)
+
+2. **COMPLEX BLOCK**
+   └─ Too many entities (1000+)
+   └─ Large file attachments
+   └─ Raster images embedded
+   └─ OLE objects
+
+3. **MEMORY CORRUPTION**
+   └─ AutoCAD out of memory
+   └─ Drawing file corruption
+   └─ System instability
+
+4. **AUTOCAD VERSION BUG**
+   └─ Known bug in specific AutoCAD version
+   └─ Service pack needed
+
+═══════════════════════════════════════════════════════════════════════════
+✅ WHAT v5.16 DOES TO PREVENT CRASHES
+═══════════════════════════════════════════════════════════════════════════
+
+NEW in v5.16:
+✓ Block validation before export (checks flags)
+✓ Skips anonymous blocks (flag 1)
+✓ Skips XREF blocks (flag 4)
+✓ 30-second timeout per block (prevents infinite hangs)
+✓ ATTREQ=0 (disables attribute prompts)
+✓ Error recovery (restores system variables after crash)
+✓ Crash instructions (shows recovery steps)
+
+HOWEVER: If block is SEVERELY corrupted, AutoCAD will still crash.
+
+═══════════════════════════════════════════════════════════════════════════
+🚨 IMMEDIATE RECOVERY (After Crash)
+═══════════════════════════════════════════════════════════════════════════
+
+AutoCAD crashed and closed? Follow these steps:
+
+1. **REOPEN AUTOCAD**
+   └─ Start AutoCAD
+   └─ Check for autosave file (may be in Temp folder)
+   └─ Open your drawing or autosave
+
+2. **IDENTIFY PROBLEM BLOCK**
+   └─ Look at command line output BEFORE crash
+   └─ Last block name printed is the culprit
+   └─ Example: "[1/60] Processing: WD_WMH" ← This block crashed
+
+3. **RELOAD LISP**
+   └─ Command: APPLOAD
+   └─ Load: MacroManager_v5.16.lsp
+   └─ Or type: (load "MacroManager_v5.16.lsp")
+
+4. **RERUN EXPORT (Skip Problem Block)**
+   └─ Reselect blocks (exclude the one that crashed)
+   └─ Or manually fix the corrupted block first (see below)
+
+═══════════════════════════════════════════════════════════════════════════
+🔧 HOW TO FIX CORRUPTED BLOCK
+═══════════════════════════════════════════════════════════════════════════
+
+**OPTION 1: Manual WBLOCK (Test Export)**
+──────────────────────────────────────────
+Command: -WBLOCK
+File name: C:\Test\BlockName.dwg
+Block name: =BlockName
+
+→ If this crashes: Block is DEFINITELY corrupted
+→ If successful: Try export again from MacroManager
+
+**OPTION 2: Recreate Block**
+─────────────────────────────
+1. Explode the problem block instance
+2. Check for invalid entities:
+   └─ XREFs (detach them)
+   └─ OLE objects (delete them)
+   └─ Raster images (reattach properly)
+3. Run AUDIT and PURGE
+4. Recreate block: BLOCK command
+5. Try export again
+
+**OPTION 3: AUDIT + PURGE Drawing**
+────────────────────────────────────
+Command: AUDIT
+Fix errors? Y
+
+Command: PURGE
+Purge: All
+
+Command: SAVE
+→ Reopen drawing
+→ Try export again
+
+**OPTION 4: Export Without Problem Block**
+───────────────────────────────────────────
+1. Deselect the corrupted block
+2. Export remaining 59 blocks (if 60 total)
+3. Manually fix and export the problem block later
+
+═══════════════════════════════════════════════════════════════════════════
+📊 DIAGNOSTIC: Which Block Crashed?
+═══════════════════════════════════════════════════════════════════════════
+
+Look at command line BEFORE crash:
+
+>>> [1/60] Processing: WD511     ← Block #1
+    ✓ WBLOCK... ✓ 2.3s           ← Success
+
+>>> [2/60] Processing: WD_WMH    ← Block #2
+    → WBLOCK...                   ← Crash HERE!
+    ^^^^^^^^^^
+    THIS BLOCK IS CORRUPTED!
+
+Solution: Exclude "WD_WMH" from selection and try again.
+
+═══════════════════════════════════════════════════════════════════════════
+🔄 RESUME EXPORT (After Fix)
+═══════════════════════════════════════════════════════════════════════════
+
+If you successfully exported 10 blocks, then crashed:
+
+**METHOD 1: Export Remaining Only**
+────────────────────────────────────
+1. Check Block Library folder
+2. See which .dwg files were created
+3. Reselect ONLY blocks that DON'T have .dwg files yet
+4. Run export again
+5. v5.16 will overwrite existing files if selected
+
+**METHOD 2: Export All (Overwrite)**
+─────────────────────────────────────
+1. Select all blocks again (including successfully exported ones)
+2. v5.16 deletes existing .dwg files before re-export
+3. Successfully exported blocks will export again (fast)
+4. Skip or fix the corrupted block
+
+═══════════════════════════════════════════════════════════════════════════
+💡 ALTERNATIVE: Use SCRIPT Method (Batch Export)
+═══════════════════════════════════════════════════════════════════════════
+
+If direct method keeps crashing:
+
+1. **Change Export Method**:
+   └─ Dialog: Select "Script Method (Legacy)"
+   └─ This generates export_blocks.scr file
+   └─ Does NOT execute automatically
+
+2. **Edit Script (Remove Problem Block)**:
+   └─ Open: export_blocks.scr
+   └─ Find and DELETE lines for corrupted block:
+        -WBLOCK
+        C:\Path\WD_WMH.dwg
+        =
+        WD_WMH
+        
+   └─ Save script
+
+3. **Run Modified Script**:
+   └─ Command: SCRIPT
+   └─ Select: export_blocks.scr
+   └─ Watch for errors
+
+NOTE: Script method may have "bad order function" errors,
+      but at least you can edit it to skip specific blocks!
+
+═══════════════════════════════════════════════════════════════════════════
+🛡️ PREVENTION TIPS
+═══════════════════════════════════════════════════════════════════════════
+
+1. **AUDIT Drawing Before Export**
+   Command: AUDIT → Y (fix errors)
+
+2. **PURGE Unused Definitions**
+   Command: PURGE → All
+
+3. **SAVE Drawing Before Export**
+   Always save before large exports
+
+4. **EXPORT IN BATCHES**
+   Instead of 60 blocks at once:
+   └─ Export 10 blocks at a time
+   └─ Easier to identify problem blocks
+
+5. **TEST EXPORT ONE BLOCK FIRST**
+   └─ Select ONE block
+   └─ Test export
+   └─ If successful, export rest
+
+6. **UPDATE AUTOCAD**
+   └─ Check for service packs
+   └─ Update to latest version
+
+═══════════════════════════════════════════════════════════════════════════
+📞 SPECIFIC ERROR CODES
+═══════════════════════════════════════════════════════════════════════════
+
+Error c0000027:
+  Meaning: INVALID_DISPOSITION
+  Cause: Memory access violation (bad pointer)
+  Solution: Block has corrupted entities
+
+Error c0000005:
+  Meaning: ACCESS_VIOLATION
+  Cause: Invalid memory access
+  Solution: AutoCAD bug or corrupted file
+
+Error c0000374:
+  Meaning: HEAP_CORRUPTION
+  Cause: Memory heap damaged
+  Solution: Restart AutoCAD, AUDIT drawing
+
+═══════════════════════════════════════════════════════════════════════════
+✅ SUCCESS CHECKLIST (After Recovery)
+═══════════════════════════════════════════════════════════════════════════
+
+□ AutoCAD restarted
+□ Drawing reopened (or autosave recovered)
+□ AUDIT + PURGE run
+□ Drawing saved
+□ MacroManager v5.16 reloaded
+□ Problem block identified
+□ Problem block fixed OR excluded from selection
+□ Export rerun successfully
+□ All expected .dwg files created
+□ CSV file complete
+
+═══════════════════════════════════════════════════════════════════════════
+🎯 SUMMARY
+═══════════════════════════════════════════════════════════════════════════
+
+v5.16 CAN'T PREVENT AutoCAD crashes from corrupted blocks.
+v5.16 CAN help you recover and continue.
+
+BEST APPROACH:
+1. Run AUDIT + PURGE before export
+2. Export in small batches (10-20 blocks)
+3. If crash: Identify problem block from command line
+4. Fix or exclude corrupted block
+5. Resume export with remaining blocks
+
+═══════════════════════════════════════════════════════════════════════════
+
+Version: 5.16
+Date: November 12, 2025
+Status: Enhanced with crash recovery
+
+═══════════════════════════════════════════════════════════════════════════

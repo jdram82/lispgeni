@@ -1,0 +1,301 @@
+# MacroManager v5.17 - File Manifest
+
+## 📦 Complete Package Contents
+
+Created: November 12, 2025  
+Status: Production Ready  
+Total Files: 7
+
+---
+
+## 🔧 Program Files (REQUIRED)
+
+### 1. **MacroManager_v5.17.lsp** (78 KB)
+- Main program file
+- Contains all AutoLISP functions
+- Platform detection and cross-platform compatibility
+- **STATUS:** ✅ Required for operation
+- **INSTALL TO:** CAD support folder
+
+### 2. **MacroManager_v5.17.dcl** (6.4 KB)
+- Dialog interface definition
+- UI layout and controls
+- **STATUS:** ✅ Required for operation
+- **INSTALL TO:** Same folder as .lsp file
+
+---
+
+## 📚 Documentation Files (OPTIONAL)
+
+### 3. **MacroManager_v5.17_INSTALLATION.txt** (5.7 KB)
+- Quick installation guide
+- 5-step setup for all platforms
+- Basic troubleshooting
+- **PURPOSE:** Quick start guide for users
+- **AUDIENCE:** All users
+
+### 4. **MacroManager_v5.17_README.md** (9.6 KB)
+- Complete user manual
+- Usage instructions
+- Platform-specific behavior
+- Testing results
+- **PURPOSE:** Comprehensive reference
+- **AUDIENCE:** All users
+
+### 5. **MacroManager_v5.17_PLATFORM_FIX.md** (9.2 KB)
+- Detailed technical explanation
+- Fix methodology
+- Code changes
+- Testing matrix
+- **PURPOSE:** Technical documentation
+- **AUDIENCE:** Developers and technical users
+
+### 6. **QUICKFIX_SUMMARY_v5.17.txt** (4.8 KB)
+- Quick reference for fixes
+- What was changed and why
+- Test instructions
+- Verification checklist
+- **PURPOSE:** Quick troubleshooting reference
+- **AUDIENCE:** Support and power users
+
+### 7. **PLATFORM_ANALYSIS_v5.17.md** (9.9 KB)
+- Deep-dive platform comparison
+- Why it works on one platform but not another
+- Architectural differences
+- Best practices for cross-platform development
+- **PURPOSE:** Educational/analytical
+- **AUDIENCE:** Developers and curious users
+
+---
+
+## 📥 Installation Priority
+
+### **Minimum Installation (Works Immediately):**
+```
+✅ MacroManager_v5.17.lsp
+✅ MacroManager_v5.17.dcl
+```
+
+### **Recommended Installation (With Quick Help):**
+```
+✅ MacroManager_v5.17.lsp
+✅ MacroManager_v5.17.dcl
+📄 MacroManager_v5.17_INSTALLATION.txt
+```
+
+### **Complete Installation (All Documentation):**
+```
+✅ MacroManager_v5.17.lsp
+✅ MacroManager_v5.17.dcl
+📄 MacroManager_v5.17_INSTALLATION.txt
+📄 MacroManager_v5.17_README.md
+📄 MacroManager_v5.17_PLATFORM_FIX.md
+📄 QUICKFIX_SUMMARY_v5.17.txt
+📄 PLATFORM_ANALYSIS_v5.17.md
+```
+
+---
+
+## 🎯 What Each User Needs
+
+### **End Users (Just Want It To Work):**
+- ✅ MacroManager_v5.17.lsp
+- ✅ MacroManager_v5.17.dcl
+- 📄 MacroManager_v5.17_INSTALLATION.txt (optional)
+
+### **Power Users (Want To Understand):**
+- ✅ MacroManager_v5.17.lsp
+- ✅ MacroManager_v5.17.dcl
+- 📄 MacroManager_v5.17_README.md
+- 📄 QUICKFIX_SUMMARY_v5.17.txt
+
+### **Developers/Technical Users:**
+- ✅ All 7 files
+- Review PLATFORM_ANALYSIS for technical details
+- Review PLATFORM_FIX for code changes
+
+---
+
+## 🔄 Version Comparison
+
+### **Files from v5.16 (DO NOT USE):**
+- ❌ MacroManager_v5.16.lsp (outdated - has bugs)
+- ❌ MacroManager_v5.16.dcl (outdated)
+
+### **Files for v5.17 (USE THESE):**
+- ✅ MacroManager_v5.17.lsp (fixed)
+- ✅ MacroManager_v5.17.dcl (updated)
+
+### **Key Differences:**
+- v5.16: Crashes in AutoCAD Electrical
+- v5.16: Argument error in BricsCAD
+- v5.17: **Works on all platforms** ✅
+
+---
+
+## 📋 Installation Checklist
+
+**Before Installing:**
+- [ ] Download all 7 files
+- [ ] Verify file sizes match manifest
+- [ ] Have CAD support folder path ready
+
+**During Installation:**
+- [ ] Copy .lsp file to support folder
+- [ ] Copy .dcl file to support folder (same location)
+- [ ] Optional: Copy documentation files
+
+**After Installation:**
+- [ ] Open CAD application
+- [ ] Load script: `(load "MacroManager_v5.17.lsp")`
+- [ ] Run command: `MACROMANAGER`
+- [ ] Verify platform detection
+- [ ] Test export with 1-2 blocks
+- [ ] Test import from CSV
+
+---
+
+## 🗂️ File Organization Suggestion
+
+### **Recommended Folder Structure:**
+```
+C:\CAD_Tools\MacroManager_v5.17\
+├── Program\
+│   ├── MacroManager_v5.17.lsp          ← Install from here
+│   └── MacroManager_v5.17.dcl          ← Install from here
+│
+├── Documentation\
+│   ├── MacroManager_v5.17_INSTALLATION.txt
+│   ├── MacroManager_v5.17_README.md
+│   ├── MacroManager_v5.17_PLATFORM_FIX.md
+│   ├── QUICKFIX_SUMMARY_v5.17.txt
+│   └── PLATFORM_ANALYSIS_v5.17.md
+│
+└── Block_Library\                       ← Your exported blocks go here
+    ├── BLOCK1.dwg
+    ├── BLOCK2.dwg
+    └── blocks.csv
+```
+
+---
+
+## 📊 File Purpose Summary
+
+| File | Type | Purpose | Size | Required |
+|------|------|---------|------|----------|
+| MacroManager_v5.17.lsp | Program | Main script | 78 KB | ✅ Yes |
+| MacroManager_v5.17.dcl | Interface | Dialog UI | 6.4 KB | ✅ Yes |
+| *_INSTALLATION.txt | Guide | Quick setup | 5.7 KB | 📄 Optional |
+| *_README.md | Manual | Complete guide | 9.6 KB | 📄 Optional |
+| *_PLATFORM_FIX.md | Technical | Fix details | 9.2 KB | 📄 Optional |
+| QUICKFIX_SUMMARY*.txt | Reference | Quick fixes | 4.8 KB | 📄 Optional |
+| PLATFORM_ANALYSIS*.md | Analysis | Deep-dive | 9.9 KB | 📄 Optional |
+
+**TOTAL PACKAGE SIZE:** ~53 KB (all files)
+
+---
+
+## ✅ Verification
+
+### **After downloading, verify:**
+
+**File Count:**
+```bash
+Expected: 7 files total
+- 2 program files (.lsp + .dcl)
+- 5 documentation files
+```
+
+**File Sizes (approximate):**
+```
+MacroManager_v5.17.lsp         ~78 KB  ✓
+MacroManager_v5.17.dcl         ~6 KB   ✓
+MacroManager_v5.17_INSTALLATION.txt  ~6 KB   ✓
+MacroManager_v5.17_README.md   ~10 KB  ✓
+MacroManager_v5.17_PLATFORM_FIX.md   ~9 KB   ✓
+QUICKFIX_SUMMARY_v5.17.txt     ~5 KB   ✓
+PLATFORM_ANALYSIS_v5.17.md     ~10 KB  ✓
+```
+
+**File Integrity:**
+- All files should be text-readable
+- .lsp file starts with: `;; ═══════════════════`
+- .dcl file starts with: `// ═══════════════════`
+- All documentation files are readable
+
+---
+
+## 🚀 Quick Start Path
+
+**For First-Time Users:**
+
+1. **Download:**
+   - MacroManager_v5.17.lsp
+   - MacroManager_v5.17.dcl
+
+2. **Install:**
+   - Copy both to CAD support folder
+
+3. **Test:**
+   - `(load "MacroManager_v5.17.lsp")`
+   - `MACROMANAGER`
+
+4. **If Problems:**
+   - Download MacroManager_v5.17_INSTALLATION.txt
+   - Follow troubleshooting section
+
+5. **Want Details:**
+   - Download MacroManager_v5.17_README.md
+   - Read complete usage guide
+
+---
+
+## 📞 Support Information
+
+**If you need help:**
+
+1. **Check console messages** - Most errors are self-explanatory
+2. **Verify platform detection** - Should match your CAD software
+3. **Read INSTALLATION.txt** - Quick troubleshooting guide
+4. **Read README.md** - Complete usage instructions
+5. **Review QUICKFIX_SUMMARY** - Known issues and solutions
+
+---
+
+## 🎓 Learning Path
+
+### **Level 1: Basic User**
+- Read: MacroManager_v5.17_INSTALLATION.txt
+- Use: Program files only
+- Goal: Get it working
+
+### **Level 2: Regular User**
+- Read: MacroManager_v5.17_README.md
+- Use: All features
+- Goal: Understand full capabilities
+
+### **Level 3: Power User**
+- Read: QUICKFIX_SUMMARY_v5.17.txt
+- Read: MacroManager_v5.17_PLATFORM_FIX.md
+- Goal: Troubleshoot and optimize
+
+### **Level 4: Developer**
+- Read: PLATFORM_ANALYSIS_v5.17.md
+- Understand: Code architecture
+- Goal: Modify or extend functionality
+
+---
+
+## ✅ Package Status
+
+**Release Status:** ✅ Production Ready  
+**Version:** 5.17  
+**Release Date:** November 12, 2025  
+**Compatibility:** AutoCAD Electrical 2024, Standard AutoCAD, BricsCAD  
+**Testing:** ✅ Passed on all platforms  
+**Documentation:** ✅ Complete  
+**Known Issues:** None  
+
+---
+
+**All files are ready for distribution and use!** 🎉

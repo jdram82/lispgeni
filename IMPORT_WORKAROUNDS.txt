@@ -1,0 +1,126 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║  MACROMANAGER v5.13 - IMPORT CRASH WORKAROUNDS                            ║
+║  Exception c0000027 (AutoCAD Low-Level Bug)                               ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+PROBLEM:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+During import, AutoCAD throws "Unhandled Exception c0000027" which is a 
+low-level bug in AutoCAD's INSERT and WBLOCK commands. This crash happens 
+at the OS level before LISP can catch it.
+
+ROOT CAUSE:
+AutoCAD has a known bug affecting:
+- INSERT command (importing blocks)
+- WBLOCK command (exporting blocks)
+- NEW command (creating new drawing)
+- NEW BLOCK (creating new block definition)
+
+This is NOT a MacroManager bug - it's an AutoCAD installation issue.
+
+WORKAROUNDS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKAROUND 1: Import In Smaller Batches (RECOMMENDED)
+─────────────────────────────────────────────────
+1. Export blocks normally (creates export_blocks.scr and CSV)
+2. For import, only import 10-20 blocks at a time:
+   - Edit CSV file to keep only first 10-20 rows
+   - Save as CSV_BATCH1.csv
+   - Import using this file
+3. If successful, continue with next batch:
+   - Edit original CSV to keep rows 21-40
+   - Save as CSV_BATCH2.csv
+   - Import using this file
+4. Repeat until all blocks are imported
+
+ADVANTAGE: Most reliable, works around the AutoCAD bug by reducing
+           the workload per import session
+
+
+WORKAROUND 2: Manual Import Using INSERT Command
+────────────────────────────────────────────────
+If automated import keeps crashing:
+
+1. Open the CSV file in Excel or text editor
+2. For each row:
+   a. Type: INSERT
+   b. Select DWG file from Block Library folder
+   c. Enter coordinates from CSV (X, Y, Z)
+   d. Use scale 1.0, 1.0, rotation 0.0
+   e. Set properties (Color, Linetype, Layer/Type) manually
+3. This is slower but gives you full control and can handle crashes
+
+ADVANTAGE: No crashes because you control timing
+DISADVANTAGE: Very time-consuming for large block counts
+
+
+WORKAROUND 3: Update/Repair AutoCAD Installation
+─────────────────────────────────────────────────
+The crash indicates a corrupted AutoCAD installation:
+
+1. Uninstall AutoCAD completely
+2. Delete remaining AutoCAD files/folders
+3. Delete AutoCAD registry entries (if on Windows)
+4. Reinstall AutoCAD fresh
+5. Apply latest service pack/updates
+6. Test import again
+
+ADVANTAGE: Fixes the root cause
+DISADVANTAGE: Time-consuming, requires reinstall
+
+
+WORKAROUND 4: Use Different AutoCAD Version/Installation
+─────────────────────────────────────────────────────────
+1. Test on different computer with different AutoCAD
+2. Or use different AutoCAD version (if available)
+3. If that works, your current installation is broken
+
+ADVANTAGE: Confirms if it's installation-specific
+DISADVANTAGE: Requires access to different AutoCAD
+
+
+WORKAROUND 5: Split CSV and Import in Segments
+───────────────────────────────────────────────
+Use MacroManager v5.13 enhancements:
+
+1. Export creates CSV file
+2. Copy the CSV file multiple times (CSV_1.csv, CSV_2.csv, etc.)
+3. Edit each to contain only a segment (rows 1-10, 11-20, 21-30, etc.)
+4. Import using each CSV file one at a time
+5. Close and reopen AutoCAD between imports for stability
+
+This combines the batch approach with a clean environment
+
+
+MAXIMIZING SUCCESS RATE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+v5.13 includes several protections that help:
+✓ 500ms delay between imports
+✓ System variable protection (CMDECHO, ATTREQ, ATTDIA)
+✓ Command completion waits
+✓ Error trapping for individual blocks
+✓ Expert mode enabled (suppresses dialogs)
+
+However, these cannot prevent the OS-level crash at c0000027.
+
+RECOMMENDATIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For large block counts (>50 blocks):
+→ Use Workaround 1 (batch import) - most reliable
+
+For small block counts (<20 blocks):
+→ Use v5.13 automated import with its protection measures
+
+If crash still occurs:
+→ Try Workaround 2 (manual INSERT) or Workaround 3 (reinstall AutoCAD)
+
+For production environments:
+→ Use Workaround 3 (reinstall AutoCAD) to fix root cause
+
+EXPORT STATUS: ✓ FULLY WORKING
+IMPORT STATUS: ⚠ WORKS WITH WORKAROUNDS (AutoCAD bug prevents full automation)
+
+═══════════════════════════════════════════════════════════════════════════

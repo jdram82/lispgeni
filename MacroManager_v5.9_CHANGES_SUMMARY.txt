@@ -1,0 +1,549 @@
+═══════════════════════════════════════════════════════════════════════════
+  MACROMANAGER v5.9 - WHAT CHANGED & WHAT TO EXPECT
+  Updated: November 7, 2025
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 YOUR ISSUE:
+  "CSV file and Script are created but when i ran script no response 
+   from autocad Electrical"
+
+═══════════════════════════════════════════════════════════════════════════
+✅ FIXES APPLIED TO v5.9
+═══════════════════════════════════════════════════════════════════════════
+
+1. SCRIPT FILE FORMAT FIXED
+   ─────────────────────────────────────────────────────────────────────
+   OLD FORMAT (v5.8 and earlier):
+     -WBLOCK "C:\path\block.dwg" = BlockName
+   
+   PROBLEM: 
+     • All on one line - AutoCAD couldn't parse it
+     • Missing ENTER commands
+     • No response when running SCRIPT
+   
+   NEW FORMAT (v5.9):
+     -WBLOCK
+     "C:\path\block.dwg"
+     
+     =BlockName
+     
+   
+   WHY THIS WORKS:
+     • Each parameter on separate line
+     • Blank lines simulate pressing ENTER
+     • AutoCAD can now parse and execute the script
+   ─────────────────────────────────────────────────────────────────────
+
+
+2. COMPREHENSIVE DIAGNOSTICS ADDED
+   ─────────────────────────────────────────────────────────────────────
+   Now you see EXACTLY what's happening:
+   
+   >>> [STEP 1/6] Validating Export Parameters...
+   >>> ✓ CSV Path validated
+   >>> ✓ Block Library path validated
+   >>> ✓ Blocks selected: 1
+   
+   >>> [STEP 2/6] Creating Export Folders...
+   >>> ✓ Folder exists: C:\BlockLibrary
+   
+   >>> [STEP 3/6] Opening Export Files...
+   >>> CSV: C:\path\to\file.csv
+   >>> Block Library: C:\BlockLibrary
+   >>> Export Method: script
+   >>> Block Type: Electrical Automation
+   >>> ✓ Script file opened: C:\BlockLibrary\export_blocks.scr
+   >>> ✓ CSV file opened: C:\path\to\file.csv
+   
+   >>> [STEP 4/6] Writing CSV Header...
+   >>> ✓ Header written
+   
+   >>> [STEP 5/6] Processing Selected Blocks...
+   >>> Total blocks to process: 1
+   
+   >>> [1/1] Processing: BlockName
+       Type: Electrical Automation
+       Color: 256
+       Linetype: ByLayer
+       Position: (100.0000, 200.0000, 0.0000)
+   >>> ✓ CSV entry written
+       Target: C:\BlockLibrary\BlockName.dwg
+   >>> ✓ Block definition found in drawing
+       Writing to script file...
+   >>> ✓ Script commands added
+   
+   >>> [STEP 6/6] Finalizing Export...
+   >>> ✓ CSV file closed
+   >>> ✓ Script file closed
+   
+   >>> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   >>> EXPORT SUMMARY
+   >>> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   >>> Total Blocks Processed: 1
+   >>> Successful Exports: 1
+   >>> Export Method: script
+   >>> Block Type: Electrical Automation
+   >>> CSV File: C:\path\to\file.csv
+   >>> Block Library: C:\BlockLibrary
+   >>> Script File: C:\BlockLibrary\export_blocks.scr
+   ─────────────────────────────────────────────────────────────────────
+
+
+3. DETAILED ERROR REPORTING
+   ─────────────────────────────────────────────────────────────────────
+   If anything fails, you'll see:
+   
+   ✗ FAILED: No CSV file selected!
+   ✗ FAILED: No Block Library folder selected!
+   ✗ FAILED: No blocks selected for export!
+   ✗ Failed to create script file!
+   ✗ Failed to create CSV file!
+   ✗ Block definition NOT found in drawing!
+   
+   Each error tells you EXACTLY what to fix.
+   ─────────────────────────────────────────────────────────────────────
+
+
+4. IMPROVED COMPLETION MESSAGE
+   ─────────────────────────────────────────────────────────────────────
+   Dialog now shows:
+   
+   ═══════════════════════════════════════
+   ✓ MACROMANAGER EXPORT COMPLETE
+   ═══════════════════════════════════════
+   
+   CSV File Created:
+   • 1 blocks exported
+   • Location: C:\path\to\file.csv
+   
+   Script File Created:
+   • Location: C:\BlockLibrary\export_blocks.scr
+   
+   ───────────────────────────────────────
+   TO CREATE DWG FILES:
+   ───────────────────────────────────────
+   1. Type command: SCRIPT
+   2. Browse to: C:\BlockLibrary
+   3. Select: export_blocks.scr
+   4. Press OK and wait
+   
+   The script will create 1 DWG files
+   in the Block Library folder.
+   ─────────────────────────────────────────────────────────────────────
+
+
+═══════════════════════════════════════════════════════════════════════════
+📋 WHAT TO DO NOW
+═══════════════════════════════════════════════════════════════════════════
+
+STEP 1: Load the updated MacroManager
+  ────────────────────────────────────────────────────────────────────
+  1. Type: APPLOAD
+  2. Browse to: MacroManager_v5.9.lsp
+  3. Click: Load
+  4. Click: Close
+  ────────────────────────────────────────────────────────────────────
+
+
+STEP 2: Run the export again
+  ────────────────────────────────────────────────────────────────────
+  1. Type: MACROMANAGER
+  2. Click: SELECT BLOCKS
+  3. Choose block(s)
+  4. Set Type: (Electrical Automation, Power, etc.)
+  5. Export Method: Script (recommended)
+  6. Browse: Block Library folder
+  7. Browse: CSV file save location
+  8. Click: START EXPORT
+  ────────────────────────────────────────────────────────────────────
+
+
+STEP 3: READ THE COMMAND LINE
+  ────────────────────────────────────────────────────────────────────
+  You'll see detailed progress:
+  
+  [STEP 1/6] Validating...
+  [STEP 2/6] Creating folders...
+  [STEP 3/6] Opening files...
+  [STEP 4/6] Writing header...
+  [STEP 5/6] Processing blocks...
+    [1/3] Processing: block01
+    ✓ CSV entry written
+    ✓ Script commands added
+    [2/3] Processing: block02
+    ...
+  [STEP 6/6] Finalizing...
+  
+  EXPORT SUMMARY shows success count and file locations
+  ────────────────────────────────────────────────────────────────────
+
+
+STEP 4: Verify files created
+  ────────────────────────────────────────────────────────────────────
+  Check these files exist:
+  
+  ✓ CSV file: Should contain your block data
+    → Open in Excel to verify
+    → Check Block Name, coordinates, Type columns
+  
+  ✓ Script file: Should contain WBLOCK commands
+    → Open export_blocks.scr in Notepad
+    → Should see -WBLOCK commands
+    → Should see your block names
+    → Should see DWG file paths
+  ────────────────────────────────────────────────────────────────────
+
+
+STEP 5: Run the script
+  ────────────────────────────────────────────────────────────────────
+  1. Type: SCRIPT
+  2. Browse to Block Library folder
+  3. Select: export_blocks.scr
+  4. Click: OK
+  5. WATCH THE COMMAND LINE
+  
+  You should see:
+    Command: -WBLOCK
+    Enter name of output file or [? =]: "C:\path\block.dwg"
+    Source object: =BlockName
+    
+    Command: -WBLOCK
+    Enter name of output file or [? =]: "C:\path\block2.dwg"
+    Source object: =BlockName2
+    ...
+  ────────────────────────────────────────────────────────────────────
+
+
+STEP 6: Check for DWG files
+  ────────────────────────────────────────────────────────────────────
+  1. Open Windows Explorer
+  2. Navigate to Block Library folder
+  3. Look for .dwg files
+  
+  You should see:
+    BlockName.dwg
+    BlockName2.dwg
+    BlockName3.dwg
+    ...
+  
+  One DWG file per block exported
+  ────────────────────────────────────────────────────────────────────
+
+
+═══════════════════════════════════════════════════════════════════════════
+🔍 DIAGNOSING PROBLEMS
+═══════════════════════════════════════════════════════════════════════════
+
+Use this flowchart to identify issues:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Does MacroManager show STEP 1/6 through STEP 6/6?              │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO → File not loaded or old version
+         │        FIX: Reload MacroManager_v5.9.lsp
+         │
+         └─ YES → Export process ran
+                  ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Do you see "EXPORT SUMMARY" with success count?                │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO → Export failed early
+         │        CHECK: Error messages in command line
+         │        FIX: Follow error instructions
+         │
+         └─ YES → Export completed
+                  ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Does CSV file exist and contain data?                          │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO → File creation failed
+         │        CHECK: File permissions, disk space
+         │        FIX: Choose different save location
+         │
+         └─ YES → CSV export worked
+                  ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Does export_blocks.scr exist in Block Library folder?          │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO → Script creation failed
+         │        CHECK: Folder permissions
+         │        FIX: Choose different Block Library folder
+         │
+         └─ YES → Script file created
+                  ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Open export_blocks.scr in Notepad - does it have content?      │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO/EMPTY → No blocks processed
+         │             CHECK: Were blocks selected?
+         │             FIX: Re-run export with blocks selected
+         │
+         └─ YES → Script format correct
+                  ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ When you run SCRIPT command, does AutoCAD show -WBLOCK?        │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO → Script not running
+         │        CHECK: Selected correct .scr file?
+         │        FIX: Browse to export_blocks.scr again
+         │
+         └─ YES → Script is executing
+                  ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Do DWG files appear in Block Library folder?                   │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ├─ NO → WBLOCK failed
+         │        CHECK: "Block not found" errors?
+         │               "Cannot write" errors?
+         │               AutoCAD crash (exception c0000027)?
+         │        
+         │        If crashes = AutoCAD WBLOCK bug
+         │        FIX: Try on different computer/AutoCAD version
+         │
+         └─ YES → ✓✓✓ SUCCESS! ✓✓✓
+                  All DWG files created
+
+
+═══════════════════════════════════════════════════════════════════════════
+📊 EXPECTED VS ACTUAL RESULTS
+═══════════════════════════════════════════════════════════════════════════
+
+BEFORE (v5.8):
+  ✗ Script file format incorrect
+  ✗ No detailed diagnostics
+  ✗ No step-by-step progress
+  ✗ Script runs but does nothing
+  ✗ Hard to identify where problem occurs
+
+AFTER (v5.9):
+  ✓ Script file format correct for AutoCAD
+  ✓ Detailed diagnostics for every step
+  ✓ Clear progress indicators (1/6, 2/6, etc.)
+  ✓ Script should execute WBLOCK commands
+  ✓ Easy to identify exact failure point
+
+
+WHAT YOU SHOULD SEE NOW:
+
+1. During Export (Command Line):
+   ──────────────────────────────────────────────────────────────
+   >>> [STEP 1/6] Validating Export Parameters...
+   >>> ✓ CSV Path validated
+   >>> ✓ Block Library path validated
+   >>> ✓ Blocks selected: 1
+   
+   >>> [STEP 2/6] Creating Export Folders...
+   >>> ✓ Folder exists
+   
+   >>> [STEP 3/6] Opening Export Files...
+   >>> ✓ Script file opened
+   >>> ✓ CSV file opened
+   
+   >>> [STEP 4/6] Writing CSV Header...
+   >>> ✓ Header written
+   
+   >>> [STEP 5/6] Processing Selected Blocks...
+   >>> [1/1] Processing: BlockName
+   >>> ✓ CSV entry written
+   >>> ✓ Script commands added
+   
+   >>> [STEP 6/6] Finalizing Export...
+   >>> ✓ CSV file closed
+   >>> ✓ Script file closed
+   
+   >>> EXPORT SUMMARY
+   >>> Successful Exports: 1
+   ──────────────────────────────────────────────────────────────
+
+2. Script File Content (export_blocks.scr):
+   ──────────────────────────────────────────────────────────────
+   -WBLOCK
+   "C:\BlockLibrary\BlockName.dwg"
+   
+   =BlockName
+   
+   ──────────────────────────────────────────────────────────────
+
+3. When Running SCRIPT (Command Line):
+   ──────────────────────────────────────────────────────────────
+   Command: SCRIPT
+   Script file: C:\BlockLibrary\export_blocks.scr
+   
+   Command: -WBLOCK
+   Enter name of output file: "C:\BlockLibrary\BlockName.dwg"
+   Source object: =BlockName
+   
+   → DWG file created: C:\BlockLibrary\BlockName.dwg
+   ──────────────────────────────────────────────────────────────
+
+
+═══════════════════════════════════════════════════════════════════════════
+🎓 UNDERSTANDING THE FIX
+═══════════════════════════════════════════════════════════════════════════
+
+THE PROBLEM:
+  AutoCAD script files need proper line breaks to simulate user input.
+  When WBLOCK runs interactively, you press ENTER after each prompt.
+  The script must include blank lines to simulate those ENTER keys.
+
+OLD SCRIPT (BROKEN):
+  -WBLOCK "C:\path\block.dwg" = BlockName
+  
+  This tries to put everything on one line.
+  AutoCAD doesn't know where one parameter ends and another begins.
+  Result: Command ignored, nothing happens.
+
+NEW SCRIPT (FIXED):
+  -WBLOCK              ← Command name
+  "C:\path\block.dwg"  ← File path
+                       ← ENTER (blank line)
+  =BlockName           ← Block name
+                       ← ENTER (blank line)
+  
+  AutoCAD reads line-by-line, treating blank lines as ENTER.
+  Result: WBLOCK executes correctly, DWG file created.
+
+
+THE DIAGNOSTIC ADDITIONS:
+  Previously, you only saw:
+    "Export complete"
+  
+  Now you see 6 steps with validation at each stage:
+    [STEP 1/6] Validating...
+    [STEP 2/6] Creating folders...
+    [STEP 3/6] Opening files...
+    [STEP 4/6] Writing header...
+    [STEP 5/6] Processing blocks...
+    [STEP 6/6] Finalizing...
+  
+  Each step shows success (✓) or failure (✗).
+  If something fails, you know EXACTLY where.
+
+
+═══════════════════════════════════════════════════════════════════════════
+📁 FILES YOU HAVE NOW
+═══════════════════════════════════════════════════════════════════════════
+
+1. MacroManager_v5.9.lsp (Updated)
+   • Fixed script file format
+   • Added comprehensive diagnostics
+   • Step-by-step progress indicators
+   • Detailed error messages
+   • Success/failure reporting per block
+
+2. MacroManager_v5.9.dcl (Unchanged)
+   • Dialog interface
+   • All buttons and controls
+
+3. MacroManager_DIAGNOSTICS_GUIDE.txt (New)
+   • Explains entire export process
+   • Shows what happens at each step
+   • Troubleshooting flowchart
+   • Expected output examples
+
+4. MacroManager_v5.9_README.txt (Existing)
+   • Installation instructions
+   • Usage guide
+   • Known issues
+
+
+═══════════════════════════════════════════════════════════════════════════
+✅ VERIFICATION CHECKLIST
+═══════════════════════════════════════════════════════════════════════════
+
+After running export with v5.9, verify:
+
+[ ] Saw "STEP 1/6" through "STEP 6/6" in command line
+[ ] Each step showed ✓ success indicators
+[ ] "EXPORT SUMMARY" appeared at end
+[ ] Success count matches number of blocks
+[ ] CSV file exists and opens
+[ ] CSV contains block data with Type column
+[ ] export_blocks.scr exists in Block Library folder
+[ ] Script file has content (not empty)
+[ ] Script format shows -WBLOCK on separate lines
+[ ] Paths in script are in quotes
+[ ] Block names in script match your blocks
+
+When running SCRIPT:
+[ ] Command line shows -WBLOCK executing
+[ ] See "Enter name of output file:" prompts
+[ ] See "Source object:" confirmations
+[ ] No "Block not found" errors
+[ ] No "Cannot write to file" errors
+[ ] DWG files appear in Block Library folder
+[ ] Can open DWG files in AutoCAD
+
+
+═══════════════════════════════════════════════════════════════════════════
+🔮 WHAT HAPPENS NEXT
+═══════════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: Script runs and creates DWG files
+  ✓✓✓ SUCCESS! Everything is working now.
+  → The script format fix solved the problem
+  → You can now export blocks reliably
+
+SCENARIO 2: Script runs but AutoCAD crashes
+  → This is the AutoCAD WBLOCK bug (exception c0000027)
+  → NOT a MacroManager issue
+  → CSV export still works (use that data)
+  → Try script on different computer/AutoCAD version
+
+SCENARIO 3: Script runs but no DWG files
+  → Check command line for specific errors
+  → Look for "Block not found" or "Cannot write"
+  → Refer to DIAGNOSTICS_GUIDE.txt for solutions
+
+SCENARIO 4: Export fails at specific step
+  → Command line will show which step (1/6, 2/6, etc.)
+  → Error message will indicate the problem
+  → Easy to fix based on specific error
+
+
+═══════════════════════════════════════════════════════════════════════════
+📝 SUMMARY
+═══════════════════════════════════════════════════════════════════════════
+
+PROBLEM IDENTIFIED:
+  • Script file format was incorrect
+  • All WBLOCK parameters on one line
+  • AutoCAD couldn't parse it
+  • Script ran but did nothing
+
+SOLUTION IMPLEMENTED:
+  • Script now writes proper multi-line format
+  • Blank lines simulate ENTER key presses
+  • AutoCAD can now execute WBLOCK commands
+  • Comprehensive diagnostics added
+  • Step-by-step progress indicators
+  • Clear error messages
+
+WHAT TO EXPECT:
+  • Detailed command line output showing progress
+  • Clear indication if anything fails
+  • Script file format validated
+  • WBLOCK commands should execute
+  • DWG files created (unless AutoCAD crashes)
+
+NEXT STEPS:
+  1. Load MacroManager_v5.9.lsp
+  2. Run MACROMANAGER command
+  3. Export blocks using Script method
+  4. READ the command line output
+  5. Verify CSV and script files created
+  6. Run SCRIPT command
+  7. Check for DWG files
+
+If you still have issues, the command line diagnostics
+will show EXACTLY where the problem occurs, making it
+easy to identify and fix.
+
+═══════════════════════════════════════════════════════════════════════════

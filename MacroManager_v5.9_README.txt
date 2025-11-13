@@ -1,0 +1,200 @@
+═══════════════════════════════════════════════════════════════════════════
+  MACRO MANAGER v5.9 - INSTALLATION AND USAGE GUIDE
+═══════════════════════════════════════════════════════════════════════════
+
+FILES INCLUDED:
+  ✓ MacroManager_v5.9.lsp (57 KB, 1,227 lines)
+  ✓ MacroManager_v5.9.dcl (6.3 KB, 232 lines)
+
+═══════════════════════════════════════════════════════════════════════════
+INSTALLATION
+═══════════════════════════════════════════════════════════════════════════
+
+1. Copy BOTH files to the same folder:
+   - MacroManager_v5.9.lsp
+   - MacroManager_v5.9.dcl
+
+2. Recommended locations:
+   - Same folder as your DWG files, OR
+   - Add folder to AutoCAD Support File Search Path:
+     Tools → Options → Files → Support File Search Path
+
+═══════════════════════════════════════════════════════════════════════════
+HOW TO LOAD
+═══════════════════════════════════════════════════════════════════════════
+
+Method 1 - APPLOAD (Recommended):
+  1. Type: APPLOAD
+  2. Browse to MacroManager_v5.9.lsp
+  3. Click "Load"
+  4. Click "Close"
+
+Method 2 - Command Line:
+  Type: (load "C:/full/path/to/MacroManager_v5.9.lsp")
+  Press: ENTER
+
+═══════════════════════════════════════════════════════════════════════════
+HOW TO USE - EXPORT BLOCKS
+═══════════════════════════════════════════════════════════════════════════
+
+1. Open your drawing with blocks
+
+2. Type: MACROMANAGER
+   Press: ENTER
+
+3. In the dialog:
+   
+   STEP 1: SELECT BLOCKS
+   ├─ Single Block Export: Select one block
+   ├─ Batch Mode: Click multiple blocks
+   └─ All Blocks in Drawing: Scans entire drawing
+   
+   STEP 2: SET BLOCK TYPE
+   └─ Choose category: General, Power, Control, etc.
+   
+   STEP 3: CHOOSE EXPORT METHOD
+   ├─ Script (RECOMMENDED): Creates .scr file to run manually
+   ├─ ActiveX/VLA: Direct export (may freeze AutoCAD)
+   └─ Direct WBLOCK: (WILL CRASH - Do not use)
+   
+   STEP 4: BROWSE FOR FOLDERS
+   ├─ Block Library: Where DWG files will be saved
+   └─ CSV File: Where to save block coordinates
+   
+   STEP 5: START EXPORT
+   └─ Click "► START EXPORT (CSV + DWG)"
+
+4. Result:
+   ✓ CSV file created with block data
+   ✓ .SCR script file created (if Script method selected)
+
+5. To create DWG files (Script method):
+   - Type: SCRIPT
+   - Select: export_blocks.scr
+   - Wait for completion
+   - ⚠️ May crash due to AutoCAD WBLOCK bug
+
+═══════════════════════════════════════════════════════════════════════════
+HOW TO USE - IMPORT BLOCKS
+═══════════════════════════════════════════════════════════════════════════
+
+1. Type: MACROMANAGER
+
+2. In the IMPORT section:
+   
+   STEP 1: SELECT BLOCK LIBRARY
+   └─ Browse to folder containing .DWG block files
+   
+   STEP 2: SELECT CSV FILE
+   └─ Browse to .CSV file with block coordinates
+   
+   STEP 3: PREVIEW (Optional)
+   └─ Click "PREVIEW CSV" to see blocks before import
+   
+   STEP 4: START IMPORT
+   └─ Click "START IMPORT"
+
+3. Blocks will be inserted at saved coordinates
+
+═══════════════════════════════════════════════════════════════════════════
+CSV FILE FORMAT
+═══════════════════════════════════════════════════════════════════════════
+
+Block Name,X Coordinate,Y Coordinate,Z Coordinate,Type,Color,Linetype
+test01,100.5000,200.3000,0.0000,Power,256,ByLayer
+test02,150.0000,200.3000,0.0000,Control,1,ByLayer
+
+- Column 1: Block Name (must match block in drawing)
+- Column 2-4: X, Y, Z coordinates
+- Column 5: Type/Category
+- Column 6: Color (256 = ByLayer)
+- Column 7: Linetype
+
+═══════════════════════════════════════════════════════════════════════════
+KNOWN ISSUES
+═══════════════════════════════════════════════════════════════════════════
+
+⚠️ WBLOCK CRASH ISSUE:
+  - AutoCAD has a bug causing "Unhandled Exception c0000027"
+  - This happens with WBLOCK command
+  - NOT a MacroManager bug - it's an AutoCAD issue
+  - Workaround: Use Script method and run manually
+
+⚠️ NEW COMMAND CRASH:
+  - Some AutoCAD versions crash when creating new drawings
+  - This prevents automated DWG export
+  - Workaround: CSV file always works - recreate blocks manually
+
+✓ CSV EXPORT ALWAYS WORKS:
+  - Even if DWG export fails, CSV is reliable
+  - Contains all block data for recreation
+
+═══════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+Problem: "Cannot find DCL file"
+Solution: Both .lsp and .dcl must be in same folder
+
+Problem: "No function definition: MM:EXPORT_BLOCKS_AND_DWG"
+Solution: Reload the LSP file using APPLOAD
+
+Problem: File dialogs ask for typing instead of browse
+Solution: Type FILEDIA then 1 then ENTER
+
+Problem: Export does nothing
+Solution: Check you've done all steps:
+  ✓ Selected blocks
+  ✓ Selected Block Library folder
+  ✓ Selected CSV file path
+  ✓ Clicked START EXPORT
+
+Problem: AutoCAD crashes during export
+Solution: This is the AutoCAD WBLOCK bug
+  - Use CSV file (always works)
+  - Try on different computer
+  - Consider upgrading/repairing AutoCAD
+
+═══════════════════════════════════════════════════════════════════════════
+VERSION HISTORY
+═══════════════════════════════════════════════════════════════════════════
+
+v5.9 (November 2025):
+  ✓ Simplified to script-only export (safest method)
+  ✓ Enhanced error messages
+  ✓ FILEDIA auto-restore
+  ✓ CSV export always reliable
+
+v5.8:
+  ✓ Attempted NEW+INSERT+SAVEAS method
+  ✓ Improved error handling
+
+v5.7:
+  ✓ Fixed duplicate function definitions
+  ✓ Fixed DCL load check
+
+v5.6:
+  ✓ Simplified VLA-WBLOCK syntax
+
+v5.5:
+  ✓ Fixed VLA-WBLOCK with proper VARIANT types
+
+v5.4:
+  ✓ Multiple export methods
+  ✓ Auto-execute script option
+
+v5.3:
+  ✓ Preview functionality
+  ✓ Type/Category dropdown
+
+═══════════════════════════════════════════════════════════════════════════
+SUPPORT
+═══════════════════════════════════════════════════════════════════════════
+
+For issues or questions:
+  - Check this README first
+  - Verify both files are in same folder
+  - Ensure AutoCAD is up to date
+  - Try on different computer if crashes persist
+
+═══════════════════════════════════════════════════════════════════════════

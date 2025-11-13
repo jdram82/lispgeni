@@ -1,0 +1,176 @@
+═══════════════════════════════════════════════════════════════════════════
+   MacroManager v5.14 - EXPORT SCRIPT ERROR FIX
+═══════════════════════════════════════════════════════════════════════════
+
+✅ FIXED: "bad order function: COMMAND" error during script execution
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT WAS THE PROBLEM?
+═══════════════════════════════════════════════════════════════════════════
+
+The export_blocks.scr file was missing a blank line after each WBLOCK
+command sequence. This caused AutoCAD to fail when executing the script.
+
+Error message: "Error: bad order function: COMMAND"
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT WAS FIXED?
+═══════════════════════════════════════════════════════════════════════════
+
+Changed the script generation from:
+   -WBLOCK
+   "path\block.dwg"
+   =blockname
+   (next command immediately)
+
+To:
+   -WBLOCK
+   "path\block.dwg"
+   =blockname
+   (blank line)
+   
+The blank line tells AutoCAD the WBLOCK command is complete.
+
+═══════════════════════════════════════════════════════════════════════════
+SCRIPT FILE FORMAT NOW
+═══════════════════════════════════════════════════════════════════════════
+
+The export_blocks.scr file now looks like this:
+
+-WBLOCK
+"C:\Path\To\Library\WD511.dwg"
+=WD511
+
+-WBLOCK
+"C:\Path\To\Library\WD512.dwg"
+=WD512
+
+-WBLOCK
+"C:\Path\To\Library\WD513.dwg"
+=WD513
+
+Each command has ONE blank line after it to complete the command.
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT TO DO NOW
+═══════════════════════════════════════════════════════════════════════════
+
+1. Reload the updated LISP file:
+   APPLOAD → MacroManager_v5.14.lsp
+
+2. Re-run the export process:
+   MACROMANAGER
+   → Select blocks
+   → Set library folder
+   → Select CSV file
+   → Click [► START EXPORT (CSV + DWG)]
+
+3. Run the export script:
+   → Click [▶ RUN EXPORT SCRIPT]
+   OR
+   → Type: SCRIPT
+   → Select: export_blocks.scr
+
+4. The script should now execute without errors!
+
+═══════════════════════════════════════════════════════════════════════════
+VERIFICATION
+═══════════════════════════════════════════════════════════════════════════
+
+After running the script:
+✓ No "bad order function: COMMAND" error
+✓ Command line shows: ">>> Please wait while AutoCAD executes..."
+✓ DWG files are created in Block Library folder
+✓ One .dwg file per block (e.g., WD511.dwg, WD512.dwg, etc.)
+
+Check folder to verify:
+- Go to Block Library folder
+- Count .dwg files
+- Should match number of blocks exported
+
+═══════════════════════════════════════════════════════════════════════════
+IF EXPORT STILL FAILS
+═══════════════════════════════════════════════════════════════════════════
+
+Symptom: Script starts but stops partway through
+Reason: AutoCAD WBLOCK limit or memory issue
+Solution: Export blocks in smaller batches
+
+Symptom: Script runs but no DWG files created
+Reason: Write permissions or path issue
+Solution: 
+  - Check Block Library folder exists
+  - Verify write permissions
+  - Try a different folder location
+
+Symptom: "Cannot create file" errors
+Reason: File already exists or is locked
+Solution:
+  - Delete existing .dwg files in library
+  - Close any open drawings
+  - Run script again
+
+═══════════════════════════════════════════════════════════════════════════
+EXPECTED RESULTS (Your 62 Blocks)
+═══════════════════════════════════════════════════════════════════════════
+
+Export Process:
+✓ CSV created: Test_Import_Export_DWG.csv (62 blocks)
+✓ Script created: export_blocks.scr (62 WBLOCK commands)
+
+Script Execution (after fix):
+✓ No errors during execution
+✓ 62 DWG files created
+✓ Time: 5-10 minutes (depending on block complexity)
+
+Files in Block Library:
+- WD511.dwg
+- WD512.dwg
+- WD513.dwg
+- ... (continues for all 62 blocks)
+
+═══════════════════════════════════════════════════════════════════════════
+NEXT STEPS AFTER SUCCESSFUL EXPORT
+═══════════════════════════════════════════════════════════════════════════
+
+Once export is complete and DWG files are created:
+
+1. Verify all DWG files exist:
+   - Open Block Library folder
+   - Count files (should be 62)
+   - Spot-check a few files (try opening in AutoCAD)
+
+2. Proceed to IMPORT:
+   - Open target drawing (or create new drawing)
+   - MACROMANAGER
+   - Go to IMPORT section
+   - Select CSV file (Test_Import_Export_DWG.csv)
+   - Set Block Library folder (same as export)
+   - Click [► START IMPORT]
+   - Click YES to run import script
+
+3. Import will use XREF method:
+   - Generates xref_import.scr
+   - Uses -XREF attach (not INSERT - no crashes!)
+   - Blocks appear at correct coordinates
+
+═══════════════════════════════════════════════════════════════════════════
+TECHNICAL DETAILS
+═══════════════════════════════════════════════════════════════════════════
+
+Code change location: Line 900
+Old: Comment said "NO extra blank line"
+New: Added (write-line "" script_handle) - single blank line
+
+This ensures each WBLOCK command is properly terminated before the
+next command starts.
+
+Parentheses verified: 1268 = 1268 ✓ BALANCED
+
+═══════════════════════════════════════════════════════════════════════════
+
+Updated: November 12, 2025
+Fix: Added blank line after WBLOCK commands in script
+Status: Ready for re-export
+
+═══════════════════════════════════════════════════════════════════════════

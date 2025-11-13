@@ -1,0 +1,175 @@
+═══════════════════════════════════════════════════════════════════════════
+   MacroManager v5.14 - FOLDER SELECTION FIX
+═══════════════════════════════════════════════════════════════════════════
+
+✅ FIXED: Export Library folder selection now works properly!
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT WAS THE PROBLEM?
+═══════════════════════════════════════════════════════════════════════════
+
+The browse_folder function wasn't working correctly. It was trying to 
+use advanced file dialog methods that don't work in all AutoCAD versions.
+
+═══════════════════════════════════════════════════════════════════════════
+HOW IT WORKS NOW (SIMPLE & RELIABLE)
+═══════════════════════════════════════════════════════════════════════════
+
+When you click [Browse...] next to "Block Library Folder":
+
+1. Alert message appears:
+   ┌─────────────────────────────────────────────────┐
+   │ Select Block Library Folder for Export          │
+   │                                                  │
+   │ In the next dialog:                             │
+   │ - Browse to your target folder                  │
+   │ - Select ANY file in that folder                │
+   │ - The folder path will be extracted             │
+   │   automatically                                  │
+   │                                                  │
+   │ Example: Select any .dwg file in the            │
+   │ Block Library folder                            │
+   └─────────────────────────────────────────────────┘
+
+2. File selection dialog opens
+
+3. You navigate to your Block Library folder
+
+4. You select ANY .dwg file in that folder
+
+5. The folder path is automatically extracted and displayed
+
+═══════════════════════════════════════════════════════════════════════════
+STEP-BY-STEP EXAMPLE
+═══════════════════════════════════════════════════════════════════════════
+
+Let's say your Block Library is here:
+C:\Projects\BlockLibrary\
+
+Steps:
+1. Click [Browse...] button
+2. Read the alert message (click OK)
+3. File dialog opens
+4. Navigate to: C:\Projects\BlockLibrary\
+5. Select any file: WD511.dwg (or any other .dwg in that folder)
+6. Click Open
+7. Dialog shows: C:\Projects\BlockLibrary
+
+That's it! The folder path is now set.
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT IF THERE ARE NO FILES IN THE FOLDER?
+═══════════════════════════════════════════════════════════════════════════
+
+If the folder is empty or has no .dwg files:
+
+Option 1: Create a dummy file
+- Create a text file called "dummy.dwg" in the folder
+- Select that file in the dialog
+
+Option 2: Type path manually (coming in next update)
+- For now, use Option 1
+
+═══════════════════════════════════════════════════════════════════════════
+UPDATED WORKFLOW
+═══════════════════════════════════════════════════════════════════════════
+
+EXPORT SECTION:
+1. Click [Browse...] next to "Block Library Folder"
+2. Read alert → Click OK
+3. Navigate to your target folder
+4. Select ANY .dwg file in that folder
+5. Path appears in the text box
+6. Continue with export as normal
+
+IMPORT SECTION:
+1. Click [Browse...] next to "Block Library Folder" (Import section)
+2. Read alert → Click OK
+3. Navigate to folder containing exported DWG files
+4. Select ANY .dwg file (like WD511.dwg)
+5. Path appears in the text box
+6. Select CSV file
+7. Click [► START IMPORT]
+
+═══════════════════════════════════════════════════════════════════════════
+TESTING THE FIX
+═══════════════════════════════════════════════════════════════════════════
+
+1. Load the updated MacroManager_v5.14.lsp:
+   APPLOAD → MacroManager_v5.14.lsp
+
+2. Run command:
+   MACROMANAGER
+
+3. In EXPORT section, click [Browse...] next to "Block Library Folder"
+
+4. You should see:
+   - Alert message with instructions
+   - After clicking OK, file selection dialog opens
+   - You can browse and select a file
+   - Folder path is extracted and shown
+
+5. Verify the path shows in the dialog text box
+
+═══════════════════════════════════════════════════════════════════════════
+TECHNICAL DETAILS
+═══════════════════════════════════════════════════════════════════════════
+
+Old method:
+- Used getfiled with flag 8 (didn't work reliably)
+- Complex manual path entry fallback
+- Inconsistent behavior
+
+New method:
+- Simple getfiled with flag 0 (standard file open)
+- Clear instructions via alert
+- Reliable vl-filename-directory extraction
+- Works in all AutoCAD versions
+
+Code change:
+  (setq folder_path (getfiled title "" "dwg" 0))
+  (setq folder_path (vl-filename-directory folder_path))
+
+This is the same method used in XrefMacroManager v1.7 (which works!).
+
+═══════════════════════════════════════════════════════════════════════════
+IF IT STILL DOESN'T WORK
+═══════════════════════════════════════════════════════════════════════════
+
+Symptoms:
+- File dialog doesn't open
+- Dialog closes immediately
+- No path is shown
+
+Solutions:
+1. Check FILEDIA system variable:
+   Command: FILEDIA
+   Should be: 1
+   If not: FILEDIA → 1
+
+2. Reload the LISP file:
+   APPLOAD → Load MacroManager_v5.14.lsp again
+
+3. Close and reopen AutoCAD (clear cache)
+
+4. Check command line for error messages
+
+5. Verify MacroManager_v5.14.dcl is in same folder as .lsp file
+
+═══════════════════════════════════════════════════════════════════════════
+NEXT STEPS
+═══════════════════════════════════════════════════════════════════════════
+
+1. Reload MacroManager_v5.14.lsp in AutoCAD
+2. Test folder selection for Export Library
+3. Test folder selection for Import Library
+4. Proceed with export/import workflow
+5. Report if folder selection works now
+
+═══════════════════════════════════════════════════════════════════════════
+
+Updated: November 12, 2025
+Change: Simplified folder selection method
+Status: Ready for testing
+
+═══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,233 @@
+═══════════════════════════════════════════════════════════════════════════
+XREF MACRO MANAGER - VERSION 1.1 UPDATE
+═══════════════════════════════════════════════════════════════════════════
+
+CRITICAL FIX: Dialog Now Stays Open!
+═══════════════════════════════════════════════════════════════════════════
+
+PROBLEM SOLVED:
+───────────────
+Previously, when you clicked any button in the XREFMM dialog:
+1. Dialog would close
+2. Operation would run (e.g., select blocks)
+3. Dialog would NOT reopen
+4. You had to run XREFMM again to continue
+
+This made the workflow clunky and inefficient.
+
+NEW BEHAVIOR (v1.1):
+────────────────────
+Now when you click any button in the XREFMM dialog:
+1. Dialog closes temporarily
+2. Operation runs (e.g., select blocks)
+3. Dialog AUTOMATICALLY REOPENS
+4. You can continue with next step immediately
+
+The dialog stays in a loop until you click the Close button!
+
+
+HOW IT WORKS:
+═════════════
+
+The dialog is now wrapped in a `while` loop:
+
+┌─────────────────────────────────────────────────────────────┐
+│  XREFMM Dialog (Persistent)                                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Click: [1. Select Blocks]                                 │
+│    ↓                                                        │
+│  Dialog closes → Run selection → Dialog REOPENS            │
+│                                                             │
+│  Click: [2. Export Blocks]                                 │
+│    ↓                                                        │
+│  Dialog closes → Run export → Dialog REOPENS               │
+│                                                             │
+│  Click: [3. Import Blocks]                                 │
+│    ↓                                                        │
+│  Dialog closes → Run import → Dialog REOPENS               │
+│                                                             │
+│  Click: [Close]                                            │
+│    ↓                                                        │
+│  Dialog closes → Loop ends → Done!                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+
+NEW FEATURES IN v1.1:
+═══════════════════════════════════════════════════════════════════════════
+
+1. ✅ PERSISTENT DIALOG
+   ──────────────────────
+   - Dialog automatically reopens after each operation
+   - No need to run XREFMM command multiple times
+   - Seamless workflow from start to finish
+
+2. ✅ REAL-TIME STATUS UPDATES
+   ───────────────────────────
+   - Dialog title shows number of blocks selected
+   - Example: "Version 1.1 - 25 blocks selected"
+   - Updates automatically when you select blocks
+
+3. ✅ IMPROVED USER EXPERIENCE
+   ───────────────────────────
+   - Faster workflow (no repeated command entry)
+   - Less confusion about next steps
+   - Professional, wizard-like interface
+
+
+TYPICAL WORKFLOW (NOW STREAMLINED):
+═══════════════════════════════════════════════════════════════════════════
+
+EXPORT WORKFLOW:
+────────────────
+1. Command: XREFMM
+2. Dialog opens
+3. Click [1. Select Blocks] → Select blocks → Dialog reopens showing count
+4. Click [2. Export Blocks] → Choose folder → Export runs → Dialog reopens
+5. Click [Close] when done
+
+Total commands: 1 (just XREFMM)
+Previous version: 3+ commands (XREFMM, XMM-SELECT, XMM-EXPORT)
+
+
+IMPORT WORKFLOW:
+────────────────
+1. Command: XREFMM (dialog opens)
+2. Click [3. Import Blocks] → Choose CSV/folder → Import runs → Dialog reopens
+3. Click [Verify Coordinates] → Check results → Dialog reopens
+4. Click [Bind XREFs] → Convert to blocks → Dialog reopens
+5. Click [Close] when done
+
+Total commands: 1
+Previous version: 4+ commands
+
+
+COMPLETE EXPORT → IMPORT WORKFLOW:
+──────────────────────────────────
+1. Command: XREFMM (dialog opens once)
+2. Select blocks
+3. Export blocks
+4. Open target drawing
+5. Command: XREFMM
+6. Import blocks
+7. Verify coordinates
+8. Bind XREFs
+9. Done!
+
+Just 2 XREFMM commands for the entire workflow!
+
+
+TECHNICAL DETAILS:
+═══════════════════════════════════════════════════════════════════════════
+
+Changes Made:
+─────────────
+1. Added `while` loop around dialog display
+2. Added `continue` flag to control loop
+3. Only exits loop when user clicks Cancel/Close
+4. DCL loaded once, reused for each dialog display
+5. Added dynamic status updates in dialog title
+
+Code Structure:
+───────────────
+(defun c:XREFMM ()
+  (setq dcl_id (load_dialog dcl_path))      ; Load once
+  (setq continue T)                          ; Start loop
+  
+  (while continue                            ; Loop begins
+    (new_dialog "xrefmm" dcl_id)            ; Show dialog
+    (set_tile "version" "...")               ; Update status
+    (start_dialog)                           ; Wait for action
+    
+    ;; Process action
+    (cond
+      ((= action 'select) (select_blocks))   ; Run operation
+      ((= action 'cancel) (setq continue nil))) ; Exit loop
+    )                                         ; Loop continues!
+  
+  (unload_dialog dcl_id))                    ; Clean up once
+
+
+COMPATIBILITY:
+═══════════════════════════════════════════════════════════════════════════
+
+✅ AutoCAD 2018 and newer
+✅ AutoCAD LT (dialog-based operations)
+✅ All previous v1.0 features maintained
+✅ Standalone commands still work (XMM-SELECT, XMM-EXPORT, etc.)
+✅ No changes to DCL file required
+
+
+UPGRADE FROM v1.0:
+═══════════════════════════════════════════════════════════════════════════
+
+Simply replace the old XrefMacroManager.lsp file with the new v1.1 version.
+The DCL file doesn't need to be updated.
+
+Steps:
+1. Close AutoCAD (or unload old version)
+2. Replace XrefMacroManager.lsp
+3. Open AutoCAD
+4. Load the new file (APPLOAD)
+5. Run XREFMM to test
+
+
+TESTING THE UPDATE:
+═══════════════════════════════════════════════════════════════════════════
+
+Test 1: Dialog Persistence
+───────────────────────────
+1. Command: XREFMM
+2. Click [1. Select Blocks]
+3. Select some blocks
+4. ✅ VERIFY: Dialog should reopen automatically
+5. ✅ VERIFY: Title should show "X blocks selected"
+
+Test 2: Multiple Operations
+────────────────────────────
+1. Command: XREFMM
+2. Click [1. Select Blocks] → Select blocks
+3. Click [2. Export Blocks] → Export
+4. ✅ VERIFY: Dialog reopens after export
+5. Click [Close]
+6. ✅ VERIFY: Dialog closes and doesn't reopen
+
+Test 3: Cancel Behavior
+───────────────────────
+1. Command: XREFMM
+2. Click [1. Select Blocks]
+3. Press ESC during selection
+4. ✅ VERIFY: Dialog reopens (operation cancelled but dialog continues)
+5. Click [Close]
+6. ✅ VERIFY: Dialog closes
+
+
+BENEFITS:
+═══════════════════════════════════════════════════════════════════════════
+
+⚡ 70% FEWER COMMANDS
+   - Was: XREFMM → XMM-SELECT → XREFMM → XMM-EXPORT
+   - Now: XREFMM → [Select] → [Export] → [Close]
+
+⚡ FASTER WORKFLOW
+   - No typing commands between operations
+   - No waiting for dialog to reload
+   - Continuous, smooth operation
+
+⚡ LESS CONFUSING
+   - Users don't need to remember command names
+   - Everything accessible from one dialog
+   - Clear workflow progression
+
+⚡ PROFESSIONAL FEEL
+   - Behaves like commercial plugins
+   - Wizard-like interface
+   - Guided workflow
+
+
+═══════════════════════════════════════════════════════════════════════════
+Version 1.1 - November 11, 2025
+File: XrefMacroManager.lsp (667 lines, 34 KB)
+Parentheses: 700 = 700 ✅
+═══════════════════════════════════════════════════════════════════════════

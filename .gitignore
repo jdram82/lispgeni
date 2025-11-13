@@ -1,0 +1,26 @@
+# AutoCAD temporary files
+*.bak
+*.dwl
+*.dwl2
+*.dws
+*.dwt
+*.log
+
+# Windows temporary files
+Thumbs.db
+desktop.ini
+
+# Temporary test files
+test_*.tmp
+test_*.scr
+test_*.dwg
+
+# Editor files
+.vscode/
+*.swp
+*~
+
+# Compiled files
+*.o
+*.obj
+*.exe

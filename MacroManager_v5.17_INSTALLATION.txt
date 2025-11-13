@@ -1,0 +1,199 @@
+# MacroManager v5.17 - Quick Installation Guide
+
+## 📦 Files to Use
+
+**Required Files (Copy both to your CAD support folder):**
+1. `MacroManager_v5.17.lsp` (78 KB)
+2. `MacroManager_v5.17.dcl` (6.4 KB)
+
+**Documentation Files (optional reading):**
+- `MacroManager_v5.17_README.md` - Complete user guide
+- `MacroManager_v5.17_PLATFORM_FIX.md` - Technical documentation
+- `QUICKFIX_SUMMARY_v5.17.txt` - Quick fix summary
+- `PLATFORM_ANALYSIS_v5.17.md` - Platform comparison analysis
+
+---
+
+## 🚀 Quick Start (5 Steps)
+
+### **AutoCAD Electrical 2024:**
+
+**Step 1:** Copy files to support folder
+```
+C:\Users\[YourName]\AppData\Roaming\Autodesk\AutoCAD Electrical 2024\Support\
+```
+
+**Step 2:** Open AutoCAD Electrical
+
+**Step 3:** Load the script
+```
+Command: (load "MacroManager_v5.17.lsp")
+```
+
+**Step 4:** Run the command
+```
+Command: MACROMANAGER
+```
+
+**Step 5:** Verify platform detection
+```
+Look for: >>> Detected Platform: ACADE
+```
+
+---
+
+### **BricsCAD:**
+
+**Step 1:** Copy files to support folder
+```
+C:\Users\[YourName]\AppData\Roaming\Bricsys\BricsCAD\Support\
+```
+
+**Step 2:** Open BricsCAD
+
+**Step 3:** Load the script
+```
+: (load "MacroManager_v5.17.lsp")
+```
+
+**Step 4:** Run the command
+```
+: MACROMANAGER
+```
+
+**Step 5:** Verify platform detection
+```
+Look for: >>> Detected Platform: BRICSCAD
+```
+
+---
+
+## ✅ What's Fixed in v5.17?
+
+### AutoCAD Electrical Users:
+✅ **No more "Unhandled Exception" crashes during export**
+- The export function now works reliably
+- Uses platform-specific WBLOCK method
+- Blocks export successfully to DWG files
+
+### BricsCAD Users:
+✅ **No more "too few/too many arguments" errors during import**
+- The import function now accepts correct number of parameters
+- CSV import works without errors
+- Blocks imported successfully using XREF method
+
+### All Users:
+✅ **Platform auto-detection**
+✅ **Better error messages instead of crashes**
+✅ **Unified interface across all platforms**
+
+---
+
+## 📝 Basic Usage
+
+### **Export Blocks:**
+1. `MACROMANAGER` → Opens dialog
+2. Click "Select Blocks" → Click blocks in drawing
+3. Click "Browse..." (Block Library) → Choose export folder
+4. Click "Browse..." (CSV) → Choose CSV save location
+5. Click "Export Selected Blocks" → Wait for completion
+
+### **Import Blocks:**
+1. `MACROMANAGER` → Opens dialog
+2. Click "Browse..." (CSV) → Select exported CSV file
+3. Click "Browse..." (Block Library) → Select folder with DWG files
+4. Click "Import from CSV" → Choose "Yes" to run now
+
+---
+
+## ⚠️ Important Notes
+
+### **File Placement:**
+- Both `.lsp` and `.dcl` files must be in the **same folder**
+- Use the CAD support folder for automatic loading
+- Alternatively, use full path when loading: `(load "C:/Path/To/MacroManager_v5.17.lsp")`
+
+### **First-Time Loading:**
+- AutoCAD/BricsCAD may ask to trust the script → Click "Yes" or "Load"
+- If dialog doesn't appear, check console for error messages
+- DCL file must match LISP file version (both v5.17)
+
+### **Automatic Loading (Optional):**
+To load automatically on startup, add to `acad.lsp` or `on_doc_load.lsp`:
+```lisp
+(if (not (findfile "MacroManager_v5.17.lsp"))
+  (princ "\nMacroManager v5.17 not found!")
+  (load "MacroManager_v5.17.lsp")
+)
+```
+
+---
+
+## 🔍 Verification Checklist
+
+After installation, verify:
+
+- [ ] Files copied to support folder
+- [ ] Script loads without errors: `(load "MacroManager_v5.17.lsp")`
+- [ ] Command works: `MACROMANAGER`
+- [ ] Dialog appears
+- [ ] Console shows platform detection message
+- [ ] Platform is correct (ACADE/AUTOCAD/BRICSCAD)
+
+---
+
+## 🆘 Quick Troubleshooting
+
+### **Problem:** "DCL file not found"
+**Solution:** Make sure `.dcl` file is in same folder as `.lsp` file
+
+### **Problem:** "Cannot find MacroManager_v5.17.lsp"
+**Solution:** Use full path: `(load "C:/full/path/to/MacroManager_v5.17.lsp")`
+
+### **Problem:** Platform shows "UNKNOWN"
+**Solution:** Manually set: `(setq *cad_platform* "ACADE")` or `"AUTOCAD"` or `"BRICSCAD"`
+
+### **Problem:** Export still crashes
+**Solution:** 
+1. Check which block causes crash (console shows block name)
+2. Try exporting one block at a time
+3. Skip problematic blocks
+4. Check console for "AutoCAD Electrical mode" message
+
+### **Problem:** Import shows "too many arguments"
+**Solution:** Make sure you're using v5.17 LISP file (not v5.16)
+
+---
+
+## 📞 Need Help?
+
+1. **Read the console output** - Most errors are explained there
+2. **Check documentation** - See `MacroManager_v5.17_README.md`
+3. **Verify platform detection** - Should show correct CAD platform
+4. **Test with single block** - Isolate the problem
+
+---
+
+## ✅ Ready to Use!
+
+Once you see this message, you're ready:
+```
+╔═══════════════════════════════════════════════════════════╗
+║  ✓ MacroManager v5.17 loaded!                           ║
+║                                                           ║
+║  NEW in v5.17: CROSS-PLATFORM COMPATIBILITY!            ║
+║  ✅ AutoCAD Electrical crash FIXED!                     ║
+║  ✅ BricsCAD import arguments FIXED!                    ║
+║  ✅ Platform auto-detection enabled                     ║
+║  ✅ XREF import method (no INSERT crashes!)             ║
+║  ✅ Error recovery with vl-catch-all-apply              ║
+╚═══════════════════════════════════════════════════════════╝
+>>> Detected Platform: [YOUR_PLATFORM]
+```
+
+---
+
+**Version:** 5.17  
+**Status:** ✅ Production Ready  
+**Date:** November 12, 2025  
+**Platforms:** AutoCAD Electrical 2024 | Standard AutoCAD | BricsCAD

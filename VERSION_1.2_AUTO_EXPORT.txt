@@ -1,0 +1,72 @@
+═══════════════════════════════════════════════════════════════════════════
+XREF MACRO MANAGER - VERSION 1.2 UPDATE
+═══════════════════════════════════════════════════════════════════════════
+
+RELEASE DATE: November 11, 2025
+
+WHAT'S NEW:
+═══════════
+
+✅ **Automated WBLOCK Export (No Scripts Needed)**
+   - Each selected block now exports directly to DWG using command-line WBLOCK
+   - No more manual SCRIPT command or additional steps
+   - Old files in the export folder are auto-deleted to avoid overwrite prompts
+   - Clear success / failure feedback for every block
+
+✅ **Persistent Dialog Improvements**
+   - Title shows "Version 1.2 - Persistent Dialog + Auto Export"
+   - Dialog remains open throughout the entire workflow
+
+CHANGES MADE:
+═════════════
+
+1. `xmm:export_blocks_automated`
+   - Replaced script generation with direct `vl-cmdf` calls to `-WBLOCK`
+   - Added error handling for each block export
+   - Added automatic file cleanup before export
+   - Updated messaging to reflect fully automated export process
+
+2. Global Initialization
+   - Added `(vl-load-com)` to ensure automation interfaces are available
+
+3. UI Updates
+   - Version strings updated from v1.1 ➜ v1.2
+   - Feature list now states "Automated WBLOCK export"
+
+USAGE NOTES:
+════════════
+
+1. Load LISP: `APPLOAD ➜ XrefMacroManager.lsp`
+2. Run dialog: `XREFMM`
+3. Click **Select Blocks**, choose block references, dialog reopens showing count
+4. Click **Export Blocks**
+   - Watch the command line for per-block status
+   - DWG files appear in the selected folder automatically
+5. Continue to Import / Verify / Bind as needed
+
+TROUBLESHOOTING:
+═══════════════
+
+- If you see `✗ Failed` messages, possible reasons include:
+  • Anonymous blocks (names begin with `*`) – these are skipped
+  • Nested blocks or unresolved references
+  • Blocks not defined in the current drawing
+
+- If AutoCAD prompts for overwrite confirmation, ensure you selected a folder
+  where you have write permissions. The code attempts to delete existing DWGs
+  before exporting, so prompts should be rare.
+
+FILE DETAILS:
+═════════════
+
+- `XrefMacroManager.lsp` ─ 34 KB, 670+ lines, 701 parentheses opening = 701 closing ✅
+- `XrefMacroManager.dcl` ─ 8.4 KB, no changes in this release
+- Supporting docs: VERSION_1.1_FIXES.txt, VERSION_1.1_PERSISTENT_DIALOG.txt, and this file
+
+NEXT STEPS:
+═══════════
+
+After verifying exports, proceed with the v1.1 import workflow (XREF-based
+script) which remains unchanged and crash-free.
+
+═══════════════════════════════════════════════════════════════════════════

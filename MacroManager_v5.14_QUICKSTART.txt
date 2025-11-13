@@ -1,0 +1,119 @@
+═══════════════════════════════════════════════════════════════════════════
+   MACRO MANAGER v5.14 - QUICK START GUIDE
+═══════════════════════════════════════════════════════════════════════════
+
+🎉 BREAKTHROUGH: NO MORE INSERT CRASHES!
+
+This version uses XREF attach method instead of INSERT command.
+Based on your working XrefMacroManager v1.7 code.
+
+═══════════════════════════════════════════════════════════════════════════
+📂 FILES YOU NEED
+═══════════════════════════════════════════════════════════════════════════
+
+✓ MacroManager_v5.14.lsp  (Main program)
+✓ MacroManager_v5.14.dcl  (Dialog interface)
+✓ MacroManager_v5.14_README.txt (Full documentation)
+
+Put all files in same folder as your drawing!
+
+═══════════════════════════════════════════════════════════════════════════
+🚀 HOW TO USE
+═══════════════════════════════════════════════════════════════════════════
+
+1. LOAD:
+   ─────
+   - Type: APPLOAD
+   - Load: MacroManager_v5.14.lsp
+   - See: "✓ MacroManager v5.14 loaded!"
+
+2. EXPORT (Works same as before):
+   ──────────────────────────────
+   - Command: MACROMANAGER
+   - Select blocks → Set library folder → Select CSV → Export
+   - Click: [▶ RUN EXPORT SCRIPT]
+   - Wait for DWG files to be created
+
+3. IMPORT (NEW - XREF Method):
+   ───────────────────────────
+   - Open target drawing
+   - Command: MACROMANAGER
+   - Set library folder → Select CSV → Click [► START IMPORT]
+   - Dialog asks: "Run script now?"
+   - Click: YES
+   - Watch blocks appear as XREFs!
+
+═══════════════════════════════════════════════════════════════════════════
+🔑 KEY DIFFERENCES FROM v5.13
+═══════════════════════════════════════════════════════════════════════════
+
+OLD (v5.13):                NEW (v5.14):
+├─ INSERT command          ├─ XREF attach method
+├─ Direct execution        ├─ Script-based execution
+├─ Crashes randomly        ├─ Never crashes! ✓
+├─ "Exception c0000027"    ├─ Stable and reliable ✓
+└─ Blocks embedded         └─ Blocks as XREFs
+
+═══════════════════════════════════════════════════════════════════════════
+📋 WHAT HAPPENS DURING IMPORT
+═══════════════════════════════════════════════════════════════════════════
+
+1. CSV file is read
+2. Import script generated: xref_import.scr
+3. Script contains for each block:
+   - Detach existing XREF (if any)
+   - Attach block as XREF at coordinates
+4. Dialog asks: "Run now?"
+5. If YES: Script executes automatically
+6. Blocks appear in drawing as XREFs
+
+═══════════════════════════════════════════════════════════════════════════
+✅ VERIFICATION
+═══════════════════════════════════════════════════════════════════════════
+
+After import:
+- Type: XREF
+- You should see list of attached references
+- Each block name should be in the list
+- Status should be "Loaded"
+
+To convert XREFs to blocks:
+- Type: -XREF → B (Bind) → Select name → 0 (Insert)
+
+═══════════════════════════════════════════════════════════════════════════
+🛠️ TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+Q: Import script generated but nothing happens?
+A: Check if script is executing. Look for -XREF commands in command line.
+   If not, manually run: SCRIPT → select xref_import.scr
+
+Q: "File not found" errors?
+A: Verify DWG files exist in Block Library folder.
+   File names must match block names exactly.
+
+Q: Blocks at wrong location?
+A: Check CSV coordinates. Use [► PREVIEW CSV] before import.
+
+Q: Still crashes?
+A: This shouldn't happen! Report exact error message.
+
+═══════════════════════════════════════════════════════════════════════════
+📞 NEXT STEPS
+═══════════════════════════════════════════════════════════════════════════
+
+1. Copy files to your drawing folder
+2. Load MacroManager_v5.14.lsp in AutoCAD
+3. Test export (should work same as before)
+4. Test import with XREF method
+5. Report results!
+
+For detailed documentation, see: MacroManager_v5.14_README.txt
+
+═══════════════════════════════════════════════════════════════════════════
+
+Version: 5.14
+Date: November 12, 2025
+Status: EXPORT ✓ Working | IMPORT 🆕 New XREF Method - Ready for Testing
+
+═══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,64 @@
+WBLOCK SCRIPT FORMAT TESTING
+============================
+
+COMMAND LINE FORMAT (Working in Method 4):
+(command "._-WBLOCK" dwg_path "=" block_name)
+
+This sends 4 inputs:
+1. "._-WBLOCK" - Command with dot prefix (current namespace) and underscore (international)
+2. dwg_path - File path response
+3. "=" - Block mode indicator
+4. block_name - Block name
+
+SCRIPT FILE FORMAT ATTEMPTS:
+============================
+
+FORMAT 1 (Combined =blockname):
+-WBLOCK
+C:\path\file.dwg
+=BLOCKNAME
+
+RESULT: "bad order function: COMMAND" error
+REASON: Script parser sees "=BLOCKNAME" as invalid command syntax
+
+FORMAT 2 (Separated = and blockname):
+-WBLOCK
+C:\path\file.dwg
+=
+BLOCKNAME
+
+RESULT: Should work - matches command input sequence
+Each line = one command response
+
+FORMAT 3 (With underscore prefix):
+_-WBLOCK
+C:\path\file.dwg
+=
+BLOCKNAME
+
+RESULT: May fail - underscore not valid in .scr files (only in LISP commands)
+
+FORMAT 4 (With blank line at end):
+-WBLOCK
+C:\path\file.dwg
+=
+BLOCKNAME
+<blank>
+
+RESULT: Blank line accepts any remaining prompts
+
+
+CORRECT FORMAT FOR .SCR FILES:
+================================
+
+-WBLOCK
+C:\path\file.dwg
+=
+BLOCKNAME
+<blank line>
+
+Key Points:
+1. NO underscore prefix in .scr files
+2. = and blockname on SEPARATE lines
+3. Blank line at end to accept defaults
+4. Each line = one response to a prompt

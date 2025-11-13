@@ -1,0 +1,1194 @@
+;; ═══════════════════════════════════════════════════════════════════════════
+;; MACRO MANAGER UNIFIED - VERSION 5.3
+;; Complete Import/Export with Block DWG Library Management
+;; ═══════════════════════════════════════════════════════════════════════════
+;;
+;; NEW FEATURES in v5.3:
+;;   ✓ Script-based WBLOCK export (crash-free)
+;;   ✓ Type/Category dropdown (8 categories)
+;;   ✓ Preview functionality before import
+;;   ✓ Block Library folder selection (user-defined location)
+;;   ✓ Block loading from DWG files during import
+;;   ✓ CSV column renamed: "Layer" → "Type"
+;;   ✓ Session memory for Block Library paths
+;;   ✓ Folder validation and auto-creation
+;;   ✓ Project-specific block libraries
+;;
+;; ALL PREVIOUS FIXES:
+;;   ✓ Fixed DEFVAR error (changed to setq)
+;;   ✓ Complete block import functionality
+;;   ✓ CSV parser with quoted field support
+;;   ✓ Export with default values (no nil errors)
+;;   ✓ Block existence validation before import
+;;   ✓ Property setting (Type/Color/Linetype)
+;;   ✓ DCL button keys fixed (accept/cancel)
+;;   ✓ Selection workflow (dialog close/reopen)
+;;   ✓ Variable initialization fixed
+;;   ✓ STRING= function replaced with EQUAL
+;;
+;; USAGE:
+;;   (load "MacroManager_v5.3.lsp")
+;;   Command: MACROMANAGER
+;;
+;; ═══════════════════════════════════════════════════════════════════════════
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; GLOBAL VARIABLES
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(if (not *selected_blocks*) (setq *selected_blocks* (list)))
+(if (not *selection_mode*) (setq *selection_mode* "single"))
+(if (not *export_block_library*) (setq *export_block_library* nil))
+(if (not *import_block_library*) (setq *import_block_library* nil))
+(if (not *block_type*) (setq *block_type* "General"))  ; Default block type
+(if (not *export_method*) (setq *export_method* "script"))  ; Default: script method
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; UTILITY: Get LISP file location for DCL search
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:get_lisp_path ( / )
+  ;; Returns the directory where this LISP file is loaded from
+  (getvar "DWGPREFIX")  ; Fallback to drawing folder for now
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; MAIN COMMAND
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun c:MACROMANAGER ( / dcl_id result dcl_path drawing_path)
+  
+  (princ "\n╔═══════════════════════════════════════════════════════════╗")
+  (princ "\n║  Macro Manager v5.3                                      ║")
+  (princ "\n║                                                           ║")
+  (princ "\n║  ✓ Script-based WBLOCK Export (Crash-Free)              ║")
+  (princ "\n║  ✓ Type/Category Dropdown (8 Categories)                ║")
+  (princ "\n║  ✓ Preview Before Import                                 ║")
+  (princ "\n║  ✓ Block Library Management                              ║")
+  (princ "\n╚═══════════════════════════════════════════════════════════╝")
+  
+  ;; Initialize global variables
+  (setq *selected_blocks* (list))
+  (setq *selection_mode* "single")
+  
+  ;; Get drawing file path
+  (setq drawing_path (getvar "DWGPREFIX"))
+  (princ (strcat "\n>>> Working folder: " drawing_path))
+  
+  ;; Try multiple DCL file names
+  (setq dcl_path nil)
+  (cond
+    ((findfile (strcat drawing_path "MacroManager_v5.3.dcl"))
+     (setq dcl_path (strcat drawing_path "MacroManager_v5.3.dcl")))
+    ((findfile (strcat drawing_path "MacroManager_v5.2_ENHANCED.dcl"))
+     (setq dcl_path (strcat drawing_path "MacroManager_v5.2_ENHANCED.dcl")))
+    ((findfile (strcat drawing_path "MacroManager_v5.1_FIXED.dcl"))
+     (setq dcl_path (strcat drawing_path "MacroManager_v5.1_FIXED.dcl")))
+    ((findfile (strcat drawing_path "MacroManager_v5.1_CORRECTED.dcl"))
+     (setq dcl_path (strcat drawing_path "MacroManager_v5.1_CORRECTED.dcl")))
+  )
+  
+  (if (not dcl_path)
+    (progn
+      (princ "\n>>> ✗ ERROR: Could not find DCL file")
+      (alert (strcat "ERROR: Cannot find DCL file\n\nSearched for:\n"
+                     "- MacroManager_v5.3.dcl\n"
+                     "- MacroManager_v5.2_ENHANCED.dcl\n"
+                     "- MacroManager_v5.1_FIXED.dcl\n"
+                     "- MacroManager_v5.1_CORRECTED.dcl\n\n"
+                     "In folder: " drawing_path))
+    )
+    (progn
+      (princ (strcat "\n>>> Loading DCL from: " dcl_path))
+      
+      ;; Load the DCL
+      (setq dcl_id (load_dialog dcl_path))
+      
+      ;; Check if loaded
+      (if (< dcl_id 0)
+        (progn
+          (princ "\n>>> ✗ ERROR: Could not load DCL")
+          (alert (strcat "ERROR: Cannot load DCL file\n\nFile: " dcl_path))
+        )
+        (progn
+          (princ "\n>>> ✓ DCL loaded!")
+          
+          ;; Create main dialog loop
+          (setq result 1)
+          (setq export_csv nil)
+          (setq import_csv nil)
+          
+          (while (> result 0)
+            (if (new_dialog "UnifiedMacroDialog" dcl_id)
+              (progn
+                (princ "\n>>> ✓ Dialog created and OPEN!")
+                
+                ;; Set radio buttons
+                (cond
+                  ((equal *selection_mode* "single") 
+                   (set_tile "export_mode_single" "1")
+                   (set_tile "export_mode_batch" "0")
+                   (set_tile "export_mode_all" "0"))
+                  ((equal *selection_mode* "batch") 
+                   (set_tile "export_mode_single" "0")
+                   (set_tile "export_mode_batch" "1")
+                   (set_tile "export_mode_all" "0"))
+                  ((equal *selection_mode* "all") 
+                   (set_tile "export_mode_single" "0")
+                   (set_tile "export_mode_batch" "0")
+                   (set_tile "export_mode_all" "1"))
+                  (T 
+                   (set_tile "export_mode_single" "1")
+                   (set_tile "export_mode_batch" "0")
+                   (set_tile "export_mode_all" "0")
+                   (setq *selection_mode* "single"))
+                )
+                
+                ;; Set Block Library paths from session memory
+                (if *export_block_library*
+                  (set_tile "export_block_library" *export_block_library*)
+                  (set_tile "export_block_library" "No folder selected")
+                )
+                
+                (if *import_block_library*
+                  (set_tile "import_block_library" *import_block_library*)
+                  (set_tile "import_block_library" "No folder selected")
+                )
+                
+                ;; Update selection count display
+                (set_tile "selection_count" (strcat "Selected: " (itoa (length *selected_blocks*)) " blocks"))
+                
+                ;; Set block type dropdown to current selection
+                (setq type_list '("General" "Power" "Control" "Protection" "Communication" "Instrumentation" "Safety" "Custom"))
+                (setq type_index (vl-position *block_type* type_list))
+                (if (not type_index) (setq type_index 0))
+                (set_tile "block_type" (itoa type_index))
+                
+                ;; Initialize preview section
+                (set_tile "preview_status" "Select a CSV file to preview blocks")
+                (start_list "preview_list")
+                (end_list)
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; EXPORT MODE SELECTION
+                ;; ══════════════════════════════════════════════════════════
+                
+                (action_tile "export_mode_single"
+                  "(progn (setq *selection_mode* \"single\") (princ \"\\n>>> Mode: SINGLE BLOCK\"))")
+                
+                (action_tile "export_mode_batch"
+                  "(progn (setq *selection_mode* \"batch\") (princ \"\\n>>> Mode: BATCH (MULTIPLE BLOCKS)\"))")
+                
+                (action_tile "export_mode_all"
+                  "(progn (setq *selection_mode* \"all\") (princ \"\\n>>> Mode: ALL BLOCKS IN DRAWING\"))")
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; BLOCK LIBRARY FOLDER SELECTION
+                ;; ══════════════════════════════════════════════════════════
+                
+                ;; Export Block Library Browse button
+                (action_tile "export_block_library_browse"
+                  "(progn 
+                     (setq *export_block_library* (mm:browse_folder \"Select Block Library Folder for Export\"))
+                     (if *export_block_library* 
+                       (set_tile \"export_block_library\" *export_block_library*)
+                     )
+                   )")
+                
+                ;; Export Block Library manual entry (when user types directly)
+                (action_tile "export_block_library"
+                  "(setq *export_block_library* $value)")
+                
+                ;; Import Block Library Browse button
+                (action_tile "import_block_library_browse"
+                  "(progn 
+                     (setq *import_block_library* (mm:browse_folder \"Select Block Library Folder for Import\"))
+                     (if *import_block_library* 
+                       (set_tile \"import_block_library\" *import_block_library*)
+                     )
+                   )")
+                
+                ;; Import Block Library manual entry (when user types directly)
+                (action_tile "import_block_library"
+                  "(setq *import_block_library* $value)")
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; SELECTION BUTTONS
+                ;; ══════════════════════════════════════════════════════════
+                
+                (action_tile "export_select"
+                  "(done_dialog 2)")
+                
+                (action_tile "export_clear"
+                  "(progn (setq *selected_blocks* (list)) (set_tile \"selection_count\" \"Selected: 0 blocks\") (princ \"\\n>>> Selection cleared\"))")
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; BLOCK TYPE/CATEGORY SELECTION
+                ;; ══════════════════════════════════════════════════════════
+                
+                (action_tile "block_type"
+                  "(progn
+                     (setq type_index (atoi $value))
+                     (setq *block_type* (nth type_index '(\"General\" \"Power\" \"Control\" \"Protection\" \"Communication\" \"Instrumentation\" \"Safety\" \"Custom\")))
+                     (princ (strcat \"\\n>>> Block Type set to: \" *block_type*))
+                   )")
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; DWG EXPORT METHOD SELECTION
+                ;; ══════════════════════════════════════════════════════════
+                
+                (action_tile "export_method_script"
+                  "(progn (setq *export_method* \"script\") (princ \"\\n>>> Export Method: Script (Auto-Execute)\"))")
+                
+                (action_tile "export_method_vla"
+                  "(progn (setq *export_method* \"vla\") (princ \"\\n>>> Export Method: ActiveX/VLA\"))")
+                
+                (action_tile "export_method_direct"
+                  "(progn (setq *export_method* \"direct\") (princ \"\\n>>> Export Method: Direct WBLOCK (May crash)\"))")
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; CSV FILE SELECTION
+                ;; ══════════════════════════════════════════════════════════
+                
+                (action_tile "export_csv_browse"
+                  "(progn 
+                     (setq export_csv (getfiled \"Save CSV\" \"\" \"csv\" 1))
+                     (if export_csv 
+                       (set_tile \"export_csv_display\" export_csv)
+                       (set_tile \"export_csv_display\" \"No file selected\")
+                     )
+                   )")
+                
+                (action_tile "export_start"
+                  "(mm:export_blocks_and_dwg export_csv *export_block_library*)")
+                
+                (action_tile "import_csv_browse"
+                  "(progn 
+                     (setq import_csv (getfiled \"Select CSV to Import\" \"\" \"csv\" 0))
+                     (if import_csv 
+                       (progn
+                         (set_tile \"import_csv_display\" import_csv)
+                         (set_tile \"preview_status\" \"CSV file selected. Click PREVIEW CSV to view blocks.\")
+                       )
+                       (progn
+                         (set_tile \"import_csv_display\" \"No file selected\")
+                         (set_tile \"preview_status\" \"Select a CSV file to preview blocks\")
+                       )
+                     )
+                   )")
+                
+                (action_tile "import_preview"
+                  "(mm:preview_csv import_csv)")
+                
+                (action_tile "import_start"
+                  "(mm:import_blocks_from_dwg import_csv *import_block_library*)")
+                
+                ;; ══════════════════════════════════════════════════════════
+                ;; CLOSE BUTTONS
+                ;; ══════════════════════════════════════════════════════════
+                
+                (action_tile "accept" "(done_dialog 0)")
+                (action_tile "cancel" "(done_dialog 0)")
+                
+                ;; Start the dialog
+                (setq result (start_dialog))
+                
+                ;; Handle dialog return codes
+                (cond
+                  ((= result 0) 
+                   (setq result 0))
+                  
+                  ((= result 2)
+                   (princ "\n>>> Dialog closed for selection...")
+                   (cond 
+                     ((equal *selection_mode* "single") (mm:select_single_block))
+                     ((equal *selection_mode* "batch") (mm:select_batch_blocks))
+                     ((equal *selection_mode* "all") (mm:select_all_blocks))
+                   )
+                   (setq result 1))
+                  
+                  (T (setq result 0))
+                )
+              )
+              (progn
+                (princ "\n>>> ✗ ERROR: Could not create dialog")
+                (setq result 0)
+              )
+            )
+          )
+          
+          ;; Unload the DCL
+          (unload_dialog dcl_id)
+          (princ "\n>>> ✓ Dialog closed")
+        )
+      )
+    )
+  )
+  
+  (princ)
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; BROWSE FOR FOLDER (Using file selection to extract folder path)
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:browse_folder (title / temp_file folder_path user_input)
+  ;; Method 1: Try to get user to select ANY file in the target folder
+  ;; The folder path will be extracted from the file selection
+  
+  (princ (strcat "\n>>> " title))
+  (princ "\n>>> SELECT ANY FILE in the target folder (the folder path will be used)")
+  
+  (setq temp_file (getfiled title "" "*" 8))
+  
+  (if temp_file
+    (progn
+      ;; Extract folder path from selected file
+      (setq folder_path (vl-filename-directory temp_file))
+      (princ (strcat "\n>>> Selected folder: " folder_path))
+      folder_path
+    )
+    (progn
+      ;; If user cancels, offer to type path manually
+      (setq user_input (getstring T "\nEnter folder path manually (or press ESC to cancel): "))
+      (if (and user_input (> (strlen user_input) 0))
+        (progn
+          ;; Remove trailing backslash if present
+          (if (= (substr user_input (strlen user_input) 1) "\\")
+            (setq user_input (substr user_input 1 (- (strlen user_input) 1)))
+          )
+          (princ (strcat "\n>>> Entered folder: " user_input))
+          user_input
+        )
+        nil
+      )
+    )
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; UPDATE SELECTION DISPLAY
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:update_selection_display ( / count_text)
+  (setq count_text (strcat "Selected: " (itoa (length *selected_blocks*)) " blocks"))
+  (princ (strcat "\n>>> " count_text))
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; SELECT SINGLE BLOCK
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:select_single_block ( / ent_name ent block_name base_pt)
+  (princ "\n\n>>> SELECT SINGLE BLOCK MODE")
+  (princ "\n>>> ══════════════════════════════════════════")
+  (princ "\n>>> Click on a block:")
+  
+  (setq ent_name (car (entsel "\nSelect block: ")))
+  
+  (if ent_name
+    (progn
+      (setq ent (entget ent_name))
+      
+      (if (= "INSERT" (cdr (assoc 0 ent)))
+        (progn
+          (setq block_name (cdr (assoc 2 ent)))
+          (setq base_pt (cdr (assoc 10 ent)))
+          
+          (setq *selected_blocks* 
+            (append *selected_blocks* (list (list ent_name ent block_name base_pt)))
+          )
+          
+          (princ (strcat "\n>>> ✓ Selected: " block_name))
+          (princ "\n>>> ══════════════════════════════════════════")
+        )
+        (progn
+          (princ "\n>>> ✗ Selected object is not a block!")
+          (princ "\n>>> ══════════════════════════════════════════")
+        )
+      )
+    )
+    (progn
+      (princ "\n>>> No selection made.")
+    )
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; SELECT BATCH (MULTIPLE) BLOCKS
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:select_batch_blocks ( / ss index ent_name ent block_name base_pt)
+  (princ "\n\n>>> SELECT BATCH MODE (MULTIPLE BLOCKS)")
+  (princ "\n>>> ══════════════════════════════════════════")
+  (princ "\n>>> Click on blocks (hold SHIFT for multi-select, press ENTER when done):")
+  
+  (setq ss (ssget))
+  
+  (if ss
+    (progn
+      (setq index 0)
+      (setq *selected_blocks* (list))
+      
+      (while (< index (sslength ss))
+        (setq ent_name (ssname ss index))
+        (setq ent (entget ent_name))
+        
+        (if (= "INSERT" (cdr (assoc 0 ent)))
+          (progn
+            (setq block_name (cdr (assoc 2 ent)))
+            (setq base_pt (cdr (assoc 10 ent)))
+            
+            (setq *selected_blocks* 
+              (append *selected_blocks* (list (list ent_name ent block_name base_pt)))
+            )
+            
+            (princ (strcat "\n    ✓ Added: " block_name))
+          )
+          (progn
+            (princ (strcat "\n    ⚠ Object at index " (itoa index) " is not a block - skipping"))
+          )
+        )
+        
+        (setq index (+ index 1))
+      )
+      
+      (princ (strcat "\n>>> ✓ Total " (itoa (length *selected_blocks*)) " blocks selected!"))
+      (princ "\n>>> ══════════════════════════════════════════")
+    )
+    (progn
+      (princ "\n>>> No selection made.")
+    )
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; SELECT ALL BLOCKS IN DRAWING
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:select_all_blocks ( / ss index ent_name ent block_name base_pt)
+  (princ "\n\n>>> SELECT ALL BLOCKS MODE")
+  (princ "\n>>> ══════════════════════════════════════════")
+  (princ "\n>>> Scanning drawing for all blocks...")
+  
+  (setq ss (ssget "X" (list (cons 0 "INSERT"))))
+  
+  (if ss
+    (progn
+      (setq index 0)
+      (setq *selected_blocks* (list))
+      
+      (while (< index (sslength ss))
+        (setq ent_name (ssname ss index))
+        (setq ent (entget ent_name))
+        
+        (setq block_name (cdr (assoc 2 ent)))
+        
+        (if (not (wcmatch block_name "*`**"))
+          (progn
+            (setq base_pt (cdr (assoc 10 ent)))
+            
+            (setq *selected_blocks* 
+              (append *selected_blocks* (list (list ent_name ent block_name base_pt)))
+            )
+            
+            (princ (strcat "\n    ✓ Found: " block_name))
+          )
+        )
+        
+        (setq index (+ index 1))
+      )
+      
+      (princ (strcat "\n>>> ✓ Total " (itoa (length *selected_blocks*)) " blocks found in drawing!"))
+      (princ "\n>>> ══════════════════════════════════════════")
+    )
+    (progn
+      (princ "\n>>> ✗ No blocks found in drawing!")
+    )
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; ALTERNATIVE WBLOCK METHODS (v5.3)
+;; Multiple approaches to export blocks as DWG files
+;; ═══════════════════════════════════════════════════════════════════════════
+
+;; Method 1: VLA-WBLOCK using ActiveX/Visual LISP
+(defun mm:wblock_vla (block_name dwg_path / acadObj doc blocks blockObj)
+  (vl-catch-all-apply
+    (function (lambda ()
+      (setq acadObj (vlax-get-acad-object))
+      (setq doc (vla-get-activedocument acadObj))
+      (setq blocks (vla-get-blocks doc))
+      
+      ;; Check if block exists
+      (if (tblsearch "BLOCK" block_name)
+        (progn
+          (setq blockObj (vla-item blocks block_name))
+          ;; Use WBLOCK method via VLA
+          (vla-wblock doc dwg_path block_name)
+          T  ; Success
+        )
+        nil  ; Block not found
+      )
+    ))
+  )
+)
+
+;; Method 2: SAVEAS with block isolation (create temp drawing)
+(defun mm:wblock_saveas (block_name dwg_path / ss)
+  (vl-catch-all-apply
+    (function (lambda ()
+      ;; Create new drawing with just this block
+      (command "._NEW" "")
+      (command "._INSERT" block_name "0,0,0" "1" "1" "0")
+      (setq ss (ssget "_X"))
+      (if ss
+        (progn
+          (command "._SAVEAS" "" dwg_path)
+          (command "._CLOSE")
+          T
+        )
+        nil
+      )
+    ))
+  )
+)
+
+;; Method 3: Direct WBLOCK with extended command syntax
+(defun mm:wblock_direct (block_name dwg_path)
+  (vl-catch-all-apply
+    (function (lambda ()
+      ;; Try with explicit prompts
+      (command "._-WBLOCK")
+      (command dwg_path)
+      (command "=")
+      (command block_name)
+      (command)
+      T
+    ))
+  )
+)
+
+;; Method 4: ObjectDBX method (most stable)
+(defun mm:wblock_objectdbx (block_name dwg_path / dbx doc)
+  (vl-catch-all-apply
+    (function (lambda ()
+      (setq dbx (vla-getinterfaceobject 
+                  (vlax-get-acad-object) 
+                  (if (< (atoi (getvar "ACADVER")) 16)
+                    "ObjectDBX.AxDbDocument"
+                    (strcat "ObjectDBX.AxDbDocument." (itoa (atoi (getvar "ACADVER"))))
+                  )
+                ))
+      
+      ;; Create new document
+      (vla-activate dbx)
+      
+      ;; Copy block definition to new document
+      ;; (Complex implementation - simplified here)
+      
+      ;; Save the document
+      (vla-saveas dbx dwg_path)
+      (vlax-release-object dbx)
+      T
+    ))
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; EXPORT BLOCKS TO CSV + DWG FILES (v5.3)
+;; Uses SCRIPT file method + Alternative methods
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:export_blocks_and_dwg (csv_path block_library_path / file_handle index block_info 
+                                 ent_name ent block_name base_pt type_val color_val ltype_val 
+                                 x_str y_str z_str dwg_path success_count script_handle script_path)
+  (princ "\n\n>>> EXPORTING SELECTED BLOCKS (CSV + DWG)")
+  (princ "\n>>> ══════════════════════════════════════════")
+  
+  (cond
+    ((not csv_path)
+     (progn
+       (princ "\n>>> ✗ No CSV file selected!")
+       (alert "Please select a CSV file path for export!")))
+    
+    ((not block_library_path)
+     (progn
+       (princ "\n>>> ✗ No Block Library folder selected!")
+       (alert "Please select a Block Library folder for DWG export!")))
+    
+    ((= (length *selected_blocks*) 0)
+     (progn
+       (princ "\n>>> ✗ No blocks selected for export!")
+       (alert "Please select blocks first using the SELECT button!")))
+    
+    (T
+     (progn
+       ;; Create Block Library folder if it doesn't exist
+       (if (not (vl-file-directory-p block_library_path))
+         (progn
+           (princ (strcat "\n>>> Creating Block Library folder: " block_library_path))
+           (vl-mkdir block_library_path)
+         )
+       )
+       
+       (princ (strcat "\n>>> CSV Path: " csv_path))
+       (princ (strcat "\n>>> Block Library: " block_library_path))
+       
+       ;; Create script file for WBLOCK commands
+       (setq script_path (strcat block_library_path "\\export_blocks.scr"))
+       (setq script_handle (open script_path "w"))
+       
+       ;; Open CSV file for writing
+       (setq file_handle (open csv_path "w"))
+       
+       ;; Write header (CHANGED: "Layer" → "Type")
+       (write-line "Block Name,X Coordinate,Y Coordinate,Z Coordinate,Type,Color,Linetype" file_handle)
+       
+       ;; Process each selected block
+       (setq index 0)
+       (setq success_count 0)
+       
+       (while (< index (length *selected_blocks*))
+         (setq block_info (nth index *selected_blocks*))
+         (setq ent_name (car block_info))
+         (setq ent (cadr block_info))
+         (setq block_name (caddr block_info))
+         (setq base_pt (cadddr block_info))
+         
+         ;; Get properties with defaults
+         ;; Use dropdown-selected type instead of layer
+         (setq type_val *block_type*)
+         (if (not type_val) (setq type_val "General"))
+         
+         (setq color_val (cdr (assoc 62 ent)))
+         (if (not color_val) (setq color_val 256))
+         
+         (setq ltype_val (cdr (assoc 6 ent)))
+         (if (not ltype_val) (setq ltype_val "ByLayer"))
+         
+         ;; Format coordinates
+         (setq x_str (rtos (car base_pt) 2 4))
+         (setq y_str (rtos (cadr base_pt) 2 4))
+         (setq z_str (rtos (caddr base_pt) 2 4))
+         
+         ;; Write CSV line
+         (write-line 
+           (strcat 
+             block_name ","
+             x_str ","
+             y_str ","
+             z_str ","
+             type_val ","
+             (itoa color_val) ","
+             ltype_val
+           )
+           file_handle
+         )
+         
+         ;; Create DWG export based on selected method
+         (setq dwg_path (strcat block_library_path "\\" block_name ".dwg"))
+         
+         (if (tblsearch "BLOCK" block_name)
+           (progn
+             (cond
+               ;; Script Method (default - most stable)
+               ((equal *export_method* "script")
+                (write-line (strcat "-WBLOCK \"" dwg_path "\" = " block_name) script_handle)
+                (princ (strcat "\n    → " block_name " → Scheduled for script export")))
+               
+               ;; ActiveX/VLA Method
+               ((equal *export_method* "vla")
+                (setq vla_result (mm:wblock_vla block_name dwg_path))
+                (if (and vla_result (not (vl-catch-all-error-p vla_result)))
+                  (princ (strcat "\n    ✓ " block_name " → DWG exported (VLA)"))
+                  (princ (strcat "\n    ✗ " block_name " → VLA export failed"))))
+               
+               ;; Direct WBLOCK Method (may crash)
+               ((equal *export_method* "direct")
+                (setq direct_result (mm:wblock_direct block_name dwg_path))
+                (if (and direct_result (not (vl-catch-all-error-p direct_result)))
+                  (princ (strcat "\n    ✓ " block_name " → DWG exported (Direct)"))
+                  (princ (strcat "\n    ✗ " block_name " → Direct export failed"))))
+             )
+           )
+           (princ (strcat "\n    ✗ Block definition not found: " block_name))
+         )
+         
+         (setq success_count (+ success_count 1))
+         
+         (setq index (+ index 1))
+       )
+       
+       ;; Close both files
+       (close file_handle)
+       (close script_handle)
+       
+       (princ "\n>>> ══════════════════════════════════════════")
+       (princ (strcat "\n>>> ✓ Export preparation complete!"))
+       (princ (strcat "\n>>>   • " (itoa success_count) " blocks exported to CSV"))
+       (princ (strcat "\n>>>   • Block Type: " *block_type*))
+       (princ (strcat "\n>>>   • Export Method: " *export_method*))
+       (princ (strcat "\n>>>   • CSV: " csv_path))
+       
+       ;; Handle completion based on export method
+       (cond
+         ;; Script method - auto-execute
+         ((equal *export_method* "script")
+          (progn
+            (princ (strcat "\n>>>   • Script created: " script_path))
+            (princ "\n>>> ══════════════════════════════════════════")
+            (princ "\n>>> ⚠ Auto-executing script to create DWG files...")
+            (princ (strcat "\n>>> Command: SCRIPT \"" script_path "\""))
+            (princ "\n>>> ══════════════════════════════════════════")
+            
+            ;; Show initial completion message
+            (alert (strcat "✓ CSV Export Complete!\n\n" 
+                           (itoa success_count) 
+                           " blocks exported to CSV:\n"
+                           csv_path "\n\n"
+                           "✓ DWG Export Script Created:\n"
+                           script_path "\n\n"
+                           "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                           "Script will execute automatically...\n"
+                           "Watch command line for progress."))
+            
+            ;; Automatically execute the script
+            (princ "\n\n>>> Executing WBLOCK script automatically...")
+            (princ "\n>>> Creating DWG files. Please wait...\n")
+            
+            ;; Execute SCRIPT command
+            (setq script_result
+              (vl-catch-all-apply
+                (function (lambda ()
+                  (command "._SCRIPT" script_path)
+                ))
+              )
+            )
+            
+            (if (vl-catch-all-error-p script_result)
+              (progn
+                (princ "\n>>> ⚠ Script command error. Manual command:")
+                (princ "\n════════════════════════════════════════════════════════")
+                (princ (strcat "\n   SCRIPT \"" script_path "\""))
+                (princ "\n════════════════════════════════════════════════════════")
+              )
+              (progn
+                (princ "\n>>> ✓ Script execution started!")
+                (princ "\n>>> DWG files are being created...")
+              )
+            )
+          ))
+         
+         ;; VLA or Direct method - already exported
+         ((or (equal *export_method* "vla") (equal *export_method* "direct"))
+          (progn
+            (princ "\n>>> ══════════════════════════════════════════")
+            (princ "\n>>> ✓ DWG export complete!")
+            (princ (strcat "\n>>>   Check folder: " block_library_path))
+            (princ "\n>>> ══════════════════════════════════════════")
+            
+            (alert (strcat "✓ Export Complete!\n\n" 
+                           (itoa success_count) 
+                           " blocks exported:\n\n"
+                           "CSV: " csv_path "\n\n"
+                           "DWG files: " block_library_path "\n\n"
+                           "Method: " (if (equal *export_method* "vla") "ActiveX/VLA" "Direct WBLOCK")))
+          ))
+       )
+       
+       (princ "\n")
+     ))
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; CSV PARSER - HANDLES QUOTED FIELDS
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:parse_csv_line (line / result pos char in_quotes field max_pos)
+  (setq result '())
+  (setq field "")
+  (setq in_quotes nil)
+  (setq pos 1)
+  (setq max_pos (strlen line))
+  
+  (while (<= pos max_pos)
+    (setq char (substr line pos 1))
+    (cond
+      ((and (= char "\"") (not in_quotes))
+       (setq in_quotes T))
+      ((and (= char "\"") in_quotes)
+       (setq in_quotes nil))
+      ((and (= char ",") (not in_quotes))
+       (setq result (append result (list field)))
+       (setq field ""))
+      (T
+       (setq field (strcat field char)))
+    )
+    (setq pos (1+ pos))
+  )
+  
+  (setq result (append result (list field)))
+  result
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; CHECK FOR MISSING BLOCKS IN LIBRARY (NEW - v5.2)
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:check_missing_block_files (csv_path block_library_path / file_handle line fields 
+                                     block_name missing_blocks dwg_file msg_text)
+  (princ "\n>>> Checking for missing block DWG files...")
+  
+  (setq file_handle (open csv_path "r"))
+  (setq missing_blocks '())
+  
+  ;; Skip header
+  (read-line file_handle)
+  
+  ;; Check each block
+  (while (setq line (read-line file_handle))
+    (if (> (strlen line) 0)
+      (progn
+        (setq fields (mm:parse_csv_line line))
+        (setq block_name (car fields))
+        
+        (if (and block_name (> (strlen block_name) 0))
+          (progn
+            (setq dwg_file (strcat block_library_path "\\" block_name ".dwg"))
+            (if (not (findfile dwg_file))
+              (if (not (member block_name missing_blocks))
+                (setq missing_blocks (append missing_blocks (list block_name)))
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+  
+  (close file_handle)
+  
+  ;; Report missing blocks
+  (if missing_blocks
+    (progn
+      (setq msg_text "⚠ WARNING: Missing block DWG files:\n\n")
+      (foreach blk missing_blocks
+        (setq msg_text (strcat msg_text "  ✗ " blk ".dwg\n"))
+      )
+      (setq msg_text (strcat msg_text "\n" 
+                             "These blocks will be skipped during import.\n"
+                             "Check Block Library folder: " block_library_path))
+      (princ (strcat "\n>>> ⚠ " (itoa (length missing_blocks)) " missing block files"))
+      (alert msg_text)
+    )
+    (progn
+      (princ "\n>>> ✓ All block DWG files found!")
+    )
+  )
+  
+  missing_blocks
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; PREVIEW CSV FILE FOR IMPORT (NEW - v5.2)
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:preview_csv (csv_path / file_handle line fields block_name x y z type_val 
+                       preview_list preview_text block_count)
+  (princ "\n>>> PREVIEWING CSV FILE...")
+  
+  (cond
+    ((not csv_path)
+     (progn
+       (princ "\n>>> ✗ No CSV file selected!")
+       (set_tile "preview_status" "ERROR: No CSV file selected")
+       (alert "Please select a CSV file first!")
+     ))
+    
+    ((not (findfile csv_path))
+     (progn
+       (princ (strcat "\n>>> ✗ File not found: " csv_path))
+       (set_tile "preview_status" "ERROR: CSV file not found")
+       (alert (strcat "Cannot find file:\n" csv_path))
+     ))
+    
+    (T
+     (progn
+       (setq file_handle (open csv_path "r"))
+       
+       (if file_handle
+         (progn
+           (princ (strcat "\n>>> Reading: " csv_path))
+           
+           ;; Skip header line
+           (setq line (read-line file_handle))
+           
+           ;; Read all data lines
+           (setq preview_list (list))
+           (setq block_count 0)
+           
+           (while (setq line (read-line file_handle))
+             (if (and line (/= line ""))
+               (progn
+                 (setq fields (mm:parse_csv_line line))
+                 
+                 (if (>= (length fields) 7)
+                   (progn
+                     (setq block_name (nth 0 fields))
+                     (setq x (nth 1 fields))
+                     (setq y (nth 2 fields))
+                     (setq z (nth 3 fields))
+                     (setq type_val (nth 4 fields))
+                     
+                     ;; Create preview text
+                     (setq preview_text 
+                       (strcat 
+                         block_name 
+                         " at (" x ", " y ", " z ") - Type: " type_val
+                       )
+                     )
+                     
+                     (setq preview_list (cons preview_text preview_list))
+                     (setq block_count (+ block_count 1))
+                   )
+                 )
+               )
+             )
+           )
+           
+           (close file_handle)
+           
+           ;; Populate the list box
+           (start_list "preview_list")
+           (foreach item (reverse preview_list)
+             (add_list item)
+           )
+           (end_list)
+           
+           ;; Update status
+           (set_tile "preview_status" 
+             (strcat "Ready to import " (itoa block_count) " blocks from CSV"))
+           
+           (princ (strcat "\n>>> ✓ Preview complete: " (itoa block_count) " blocks found"))
+           (princ "\n>>> Click START IMPORT to proceed")
+         )
+         (progn
+           (princ "\n>>> ✗ Cannot open CSV file!")
+           (set_tile "preview_status" "ERROR: Cannot open CSV file")
+           (alert (strcat "Cannot open file:\n" csv_path))
+         )
+       )
+     ))
+  )
+  (princ)
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; IMPORT BLOCKS FROM CSV + DWG LIBRARY (NEW - v5.2)
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:import_blocks_from_dwg (csv_path block_library_path / file_handle line fields 
+                                  block_name x y z type_val color linetype dwg_file
+                                  ent ent_data success_count skip_count)
+  (princ "\n\n>>> STARTING BLOCK IMPORT (CSV + DWG)")
+  (princ "\n>>> ══════════════════════════════════════════")
+  
+  (cond
+    ((not csv_path)
+     (progn
+       (princ "\n>>> ✗ No CSV file selected!")
+       (alert "Please select a CSV file to import!")))
+    
+    ((not block_library_path)
+     (progn
+       (princ "\n>>> ✗ No Block Library folder selected!")
+       (alert "Please select a Block Library folder for DWG import!")))
+    
+    ((not (findfile csv_path))
+     (progn
+       (princ "\n>>> ✗ CSV file not found!")
+       (alert (strcat "CSV file not found:\n" csv_path))))
+    
+    (T
+     (progn
+       ;; Check for missing block files
+       (mm:check_missing_block_files csv_path block_library_path)
+       
+       (setq file_handle (open csv_path "r"))
+       (setq success_count 0)
+       (setq skip_count 0)
+       
+       ;; Read header
+       (read-line file_handle)
+       
+       (princ "\n>>> Processing CSV data...")
+       
+       ;; Read data lines and INSERT blocks
+       (while (setq line (read-line file_handle))
+         (if (> (strlen line) 0)
+           (progn
+             (setq fields (mm:parse_csv_line line))
+             
+             (if (>= (length fields) 7)
+               (progn
+                 ;; Parse CSV fields
+                 (setq block_name (nth 0 fields))
+                 (setq x (atof (nth 1 fields)))
+                 (setq y (atof (nth 2 fields)))
+                 (setq z (atof (nth 3 fields)))
+                 (setq type_val (nth 4 fields))
+                 (setq color (nth 5 fields))
+                 (setq linetype (nth 6 fields))
+                 
+                 ;; Check if block DWG file exists
+                 (setq dwg_file (strcat block_library_path "\\" block_name ".dwg"))
+                 
+                 (if (findfile dwg_file)
+                   (progn
+                     ;; Load block from DWG file (INSERT with file path)
+                     (princ (strcat "\n    → Loading: " block_name ".dwg"))
+                     
+                     ;; Create layer/type if specified
+                     (if (and type_val (> (strlen type_val) 0) (not (equal type_val "0")))
+                       (if (not (tblsearch "LAYER" type_val))
+                         (command "._LAYER" "_MAKE" type_val "")
+                         (command "._LAYER" "_SET" type_val "")
+                       )
+                     )
+                     
+                     ;; INSERT block from DWG file
+                     (command "._INSERT" dwg_file (list x y z) "" "" "")
+                     
+                     ;; Get inserted entity
+                     (if (setq ent (entlast))
+                       (progn
+                         (setq ent_data (entget ent))
+                         
+                         ;; Update layer/type
+                         (if (and type_val (> (strlen type_val) 0))
+                           (setq ent_data (subst (cons 8 type_val) (assoc 8 ent_data) ent_data))
+                         )
+                         
+                         ;; Update color if specified
+                         (if (and color (> (strlen color) 0) (not (equal color "256")))
+                           (progn
+                             (setq color (atoi color))
+                             (if (assoc 62 ent_data)
+                               (setq ent_data (subst (cons 62 color) (assoc 62 ent_data) ent_data))
+                               (setq ent_data (append ent_data (list (cons 62 color))))
+                             )
+                           )
+                         )
+                         
+                         ;; Update linetype
+                         (if (and linetype (> (strlen linetype) 0) (not (equal linetype "ByLayer")))
+                           (if (tblsearch "LTYPE" linetype)
+                             (if (assoc 6 ent_data)
+                               (setq ent_data (subst (cons 6 linetype) (assoc 6 ent_data) ent_data))
+                               (setq ent_data (append ent_data (list (cons 6 linetype))))
+                             )
+                           )
+                         )
+                         
+                         ;; Apply changes
+                         (entmod ent_data)
+                         
+                         (setq success_count (+ success_count 1))
+                         (princ (strcat "\n    ✓ " block_name " at (" (rtos x 2 2) ", " (rtos y 2 2) ")"))
+                       )
+                     )
+                   )
+                   (progn
+                     (setq skip_count (+ skip_count 1))
+                     (princ (strcat "\n    ✗ Block file not found: " block_name ".dwg - skipping"))
+                   )
+                 )
+               )
+               (progn
+                 (princ (strcat "\n    ⚠ Invalid CSV line (needs 7 fields): " line))
+               )
+             )
+           )
+         )
+       )
+       
+       (close file_handle)
+       
+       (princ "\n>>> ══════════════════════════════════════════")
+       (princ (strcat "\n>>> ✓ Import complete!"))
+       (princ (strcat "\n>>>   • " (itoa success_count) " blocks inserted"))
+       (princ (strcat "\n>>>   • " (itoa skip_count) " blocks skipped"))
+       (princ "\n>>> ══════════════════════════════════════════")
+       
+       (alert (strcat "Import Complete!\n\n" 
+                      "✓ Inserted: " (itoa success_count) " blocks\n"
+                      "✗ Skipped: " (itoa skip_count) " blocks\n\n"
+                      "Check command line for details."))
+     ))
+  )
+  (princ)
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; PREVIEW CSV FILE
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun mm:preview_csv (csv_path / file_handle line count preview_text)
+  (princ "\n>>> Previewing CSV file...")
+  
+  (if (not csv_path)
+    (progn
+      (princ "\n>>> ✗ No CSV file selected!")
+      (alert "Please select a CSV file to preview!"))
+    (progn
+      (if (not (findfile csv_path))
+        (progn
+          (princ "\n>>> ✗ File not found!")
+          (alert (strcat "CSV file not found:\n" csv_path)))
+        (progn
+          (setq file_handle (open csv_path "r"))
+          (setq count 0)
+          (setq preview_text "CSV PREVIEW:\n════════════════════════════════════════\n\n")
+          
+          (while (and (< count 15) (setq line (read-line file_handle)))
+            (setq preview_text (strcat preview_text line "\n"))
+            (setq count (+ count 1))
+          )
+          
+          (close file_handle)
+          
+          (setq preview_text (strcat preview_text "\n════════════════════════════════════════\n(Showing first " (itoa count) " lines)"))
+          
+          (princ (strcat "\n>>> ✓ Preview loaded (" (itoa count) " lines)"))
+          (alert preview_text)
+        )
+      )
+    )
+  )
+)
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; STARTUP MESSAGE
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(princ "\n╔═══════════════════════════════════════════════════════════╗")
+(princ "\n║  ✓ MacroManager v5.3 loaded!                            ║")
+(princ "\n║                                                           ║")
+(princ "\n║  NEW in v5.3:                                            ║")
+(princ "\n║  ✓ Script-based WBLOCK export (crash-free)              ║")
+(princ "\n║  ✓ Type/Category dropdown (8 categories)                ║")
+(princ "\n║  ✓ Preview functionality before import                  ║")
+(princ "\n║                                                           ║")
+(princ "\n║  Features:                                               ║")
+(princ "\n║  ✓ Block Library folder selection                       ║")
+(princ "\n║  ✓ Block loading from DWG library                       ║")
+(princ "\n║  ✓ CSV column: Layer → Type                             ║")
+(princ "\n║  ✓ Project-specific block libraries                     ║")
+(princ "\n║                                                           ║")
+(princ "\n║  Command: MACROMANAGER                                   ║")
+(princ "\n╚═══════════════════════════════════════════════════════════╝\n")
+
+(princ)

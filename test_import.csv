@@ -1,0 +1,4 @@
+Block Name,X Coordinate,Y Coordinate,Z Coordinate,Layer,Color,Linetype
+TEST_BLOCK_1,0,0,0,POWER,256,ByLayer
+TEST_BLOCK_2,10,0,0,CONTROL,1,ByLayer
+TEST_BLOCK_3,20,0,0,INSTRUMENTATION,3,ByLayer

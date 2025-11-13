@@ -1,0 +1,215 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║  MACROMANAGER v5.13 - BATCH IMPORT FEATURE GUIDE                          ║
+║  Safe Import for Large Block Counts                                       ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+NEW FEATURE: BATCH IMPORT UI CONTROLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The v5.13 IMPORT section now includes Batch Import Settings:
+
+1. IMPORT MODE
+   ├─ "Import All Blocks" (default)
+   │  └─ Imports entire CSV in one session
+   │     BEST FOR: Small block counts (<20)
+   │
+   └─ "Import in Batches"
+      └─ Imports only specified number of blocks per session
+         BEST FOR: Large block counts (>50)
+
+2. BLOCKS PER BATCH
+   └─ Default: 20 blocks
+   └─ Range: 1-100 blocks
+   └─ RECOMMENDATION:
+      • 20 blocks: Good balance of speed vs stability
+      • 10 blocks: Safest if crashes are frequent
+      • 50+ blocks: Faster but higher crash risk
+
+3. START FROM BLOCK NUMBER
+   └─ Default: 2 (first data row, row 1 is header)
+   └─ After first batch: Set this to next row number
+   └─ Example:
+      • Batch 1: Start from 2 (imports rows 2-21)
+      • Batch 2: Start from 22 (imports rows 22-41)
+      • Batch 3: Start from 42 (imports rows 42-61)
+
+
+WORKFLOW: BATCH IMPORT OF 369 BLOCKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Example: Importing 369 blocks at 20 blocks per batch = 19 batches
+
+SESSION 1 (Blocks 1-20):
+  1. Load: (load "MacroManager_v5.13.lsp")
+  2. Command: MACROMANAGER
+  3. Select CSV file
+  4. Select Block Library folder
+  5. Select: "Import in Batches"
+  6. Blocks per Batch: 20
+  7. Start from: 2
+  8. Click: ► START IMPORT
+  → Imports rows 2-21 (blocks 1-20)
+  → Command line shows: "Batch import complete (rows 2 to 21)"
+  → Message: "To import next batch: Edit CSV to start from row 22"
+
+SESSION 2 (Blocks 21-40):
+  1. Command: MACROMANAGER  (or reload LISP)
+  2. Select CSV file
+  3. Select Block Library folder
+  4. Select: "Import in Batches"
+  5. Blocks per Batch: 20
+  6. Start from: 22  ← UPDATED
+  7. Click: ► START IMPORT
+  → Imports rows 22-41 (blocks 21-40)
+  → Message: "To import next batch: Edit CSV to start from row 42"
+
+SESSION 3 (Blocks 41-60):
+  ...repeat with Start from: 42...
+
+SESSION 19 (Blocks 361-369):
+  1. Start from: 362
+  2. ► START IMPORT
+  → Imports remaining 8 blocks (rows 362-369)
+
+
+ADVANTAGES OF BATCH IMPORT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ CRASH RECOVERY
+  • If crash occurs at block 50, restart and continue from row 52
+  • Instead of losing all 369 blocks
+  • Only lose the current batch
+
+✓ REDUCED MEMORY USAGE
+  • Each session loads only 20 blocks
+  • Not accumulating 369 blocks in memory
+
+✓ FASTER INDIVIDUAL SESSIONS
+  • Each import session is quick (few minutes)
+  • Easier to manage
+  • Can do one batch at a time
+
+✓ PROGRESS TRACKING
+  • Easy to see how many batches completed
+  • Can pause/resume anytime
+  • Know exactly where you are
+
+
+DISADVANTAGES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✗ More time-consuming
+  • Need to run import multiple times
+  • Need to update "Start from" value each time
+  • Total time = multiple import sessions
+
+✗ Requires coordination
+  • Must keep track of which batch you're on
+  • Must update row numbers correctly
+
+
+BEST PRACTICES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. START WITH SMALL BATCHES
+   • Test with 20 blocks first
+   • If stable, can try 30 or 40 per batch
+
+2. CREATE A SPREADSHEET TO TRACK PROGRESS
+   ┌─────────┬──────────┬──────────┬──────────────┐
+   │ Batch # │ Rows     │ Start    │ Status       │
+   ├─────────┼──────────┼──────────┼──────────────┤
+   │    1    │ 2-21     │    2     │ ✓ COMPLETE   │
+   │    2    │ 22-41    │   22     │ ✓ COMPLETE   │
+   │    3    │ 42-61    │   42     │ ✓ COMPLETE   │
+   │    4    │ 62-81    │   62     │ ✓ COMPLETE   │
+   │    5    │ 82-101   │   82     │ ⏳ IN PROGRESS│
+   │   ...   │ ...      │  ...     │ ⏳ PENDING    │
+   │   19    │ 362-369  │  362     │ ⏳ PENDING    │
+   └─────────┴──────────┴──────────┴──────────────┘
+
+3. SAVE CSV FILE AFTER EACH BATCH
+   • Keep backup of original CSV
+   • Can verify which blocks imported
+
+4. DON'T MODIFY CSV BETWEEN BATCHES
+   • Just update "Start from" value
+   • Changing CSV could cause problems
+
+5. IF CRASH OCCURS
+   • Note the row number where it crashed
+   • Restart from next row
+   • Example: If crash at row 50, restart from row 51
+
+
+COMPARISON: BATCH vs FULL IMPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FULL IMPORT (Import All):
+  ✓ Fast (one session)
+  ✗ All-or-nothing (crash loses everything)
+  ✗ High crash risk (369 blocks = lots of INSERT commands)
+  ✗ Hard to recover from
+
+BATCH IMPORT (20 blocks at a time):
+  ✓ Safe (small workload per session)
+  ✓ Crash-resistant (lose only current batch)
+  ✓ Easy recovery (just resume next batch)
+  ✗ Takes multiple sessions (need patience)
+  ✗ Requires row number tracking
+
+→ RECOMMENDATION: Use Batch Import for large counts
+
+
+EXAMPLE: GETTING ROW NUMBERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your CSV file structure:
+  Row 1: "Block Name,X,Y,Z,Type,Color,Linetype"  (HEADER - skip this)
+  Row 2: "Block_001,100,200,0,General,256,ByLayer"
+  Row 3: "Block_002,110,210,0,General,256,ByLayer"
+  Row 4: "Block_003,120,220,0,General,256,ByLayer"
+  ...
+  Row 21: "Block_020,190,290,0,General,256,ByLayer"
+  Row 22: "Block_021,200,300,0,General,256,ByLayer"
+  ...
+  Row 369: "Block_368,3680,3690,0,General,256,ByLayer"
+  Row 370: "Block_369,3700,3710,0,General,256,ByLayer"
+
+For batch import with 20 blocks per batch:
+  Batch 1: Start from 2  → Imports rows 2-21
+  Batch 2: Start from 22 → Imports rows 22-41
+  Batch 3: Start from 42 → Imports rows 42-61
+  ...
+  Batch 19: Start from 362 → Imports rows 362-370 (8 blocks)
+
+
+TROUBLESHOOTING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q: I got an error "Please enter a value between 1 and 100"
+A: Blocks per Batch must be 1-100. You entered an invalid number.
+
+Q: I got "Please enter a value of 2 or higher (1=header)"
+A: Start from must be at least 2 (row 1 is header). Enter 2 or higher.
+
+Q: How do I know which batch I'm on?
+A: After each import, command line shows:
+   "Batch import complete (rows X to Y)"
+   This tells you which rows you just imported.
+   Next batch: Start from (Y+1)
+
+Q: Can I change batch size mid-way?
+A: Yes, but track carefully:
+   - Batch 1-5: 20 blocks each
+   - Batch 6: 30 blocks
+   - Just update "Blocks per Batch" value
+
+Q: What if I imported rows 2-21, then restarted?
+A: Safe to restart. Just continue from row 22.
+   Batch import tracks by row number.
+
+
+═══════════════════════════════════════════════════════════════════════════
+MacroManager v5.13 - Batch Import makes large block counts manageable!
+═══════════════════════════════════════════════════════════════════════════

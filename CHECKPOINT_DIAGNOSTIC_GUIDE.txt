@@ -1,0 +1,266 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║  MACROMANAGER v5.13 - CHECKPOINT DIAGNOSTIC SYSTEM                        ║
+║  Troubleshooting Block Insertion Failures                                 ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+WHAT ARE CHECKPOINTS?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Checkpoints are diagnostic markers that help identify exactly where the 
+block insertion process fails. Each checkpoint shows the status at different 
+stages of the import.
+
+CHECKPOINT STAGES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[CP1] PRE-INSERT VALIDATION
+    ├─ Block name being processed
+    ├─ DWG file path being used
+    ├─ X,Y,Z coordinates for insertion
+    └─ IF YOU DON'T SEE THIS: Problem reading CSV file
+
+[CP2] EXECUTING INSERT COMMAND
+    ├─ AutoCAD INSERT command is being executed
+    ├─ This is where the crash usually happens (Exception c0000027)
+    └─ IF YOU SEE THIS → Crash at [CP2] = AutoCAD bug (NOT MacroManager)
+
+[CP3] COMMAND COMPLETION
+    ├─ Waiting for AutoCAD to finish INSERT command
+    ├─ Checks if any dialogs are still open
+    └─ IF YOU DON'T SEE THIS: AutoCAD hung up
+
+[CP4] INSERT EXECUTED SUCCESSFULLY
+    ├─ INSERT command returned without error
+    ├─ Means the command finished
+    ├─ (But may not have created entity successfully)
+    └─ If you see error message here: INSERT command failed
+
+[CP5] ENTITY PROPERTIES UPDATED
+    ├─ Block was successfully inserted
+    ├─ Entity properties (layer, color, linetype) updated
+    ├─ Block insertion COMPLETE ✓
+    └─ If you see this: Block imported successfully!
+
+
+EXAMPLE OUTPUT: SUCCESSFUL IMPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+>>> [2/369] Processing: Block_001
+  [CP1] Pre-INSERT - Block: Block_001
+  [CP1] DWG file: C:\...Block_001.dwg
+  [CP1] Position: (100.00,200.00,0.00)
+  [CP2] Executing INSERT command...
+  [CP2] INSERT command returned
+  [CP3] Waiting for command completion...
+  [CP3] Command completed
+  [CP4] ✓ INSERT executed successfully
+  [CP5] ✓ Entity properties updated
+  [CP5] ✓ Block_001 inserted at (100.00, 200.00)
+
+>>> [3/369] Processing: Block_002
+  [CP1] Pre-INSERT - Block: Block_002
+  ...repeat...
+
+
+EXAMPLE OUTPUT: CRASH AT CP2 (AutoCAD Bug)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+>>> [25/369] Processing: Block_025
+  [CP1] Pre-INSERT - Block: Block_025
+  [CP1] DWG file: C:\...Block_025.dwg
+  [CP1] Position: (2500.00,2500.00,0.00)
+  [CP2] Executing INSERT command...
+  *** CRASH - Exception c0000027 ***
+  [AutoCAD restarts]
+
+INTERPRETATION:
+- Crash happened between [CP2] "Executing INSERT" and [CP2] "returned"
+- This means AutoCAD crashed DURING the INSERT command execution
+- This is NOT a MacroManager bug
+- This is AutoCAD's low-level bug (Exception c0000027)
+- Last successful block: Block_024
+- Next attempt should start from: Block_025 (use batch import)
+
+
+EXAMPLE OUTPUT: FAILURE AT CP4 (INSERT Command Failed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+>>> [50/369] Processing: Block_050
+  [CP1] Pre-INSERT - Block: Block_050
+  [CP1] DWG file: C:\...Block_050.dwg
+  [CP1] Position: (5000.00,5000.00,0.00)
+  [CP2] Executing INSERT command...
+  [CP2] INSERT command returned
+  [CP3] Waiting for command completion...
+  [CP3] Command completed
+  [CP4] ✗ INSERT ERROR: AutoCAD command error
+
+INTERPRETATION:
+- INSERT command executed but returned an error
+- Not a crash (no Exception c0000027)
+- Possible causes:
+  1. DWG file corrupted or inaccessible
+  2. Block definition invalid
+  3. Insufficient permissions to read file
+- Action: Check Block_050.dwg file
+
+
+EXAMPLE OUTPUT: FAILURE AT CP5 (Entity Not Created)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+>>> [75/369] Processing: Block_075
+  [CP1] Pre-INSERT - Block: Block_075
+  [CP1] DWG file: C:\...Block_075.dwg
+  [CP1] Position: (7500.00,7500.00,0.00)
+  [CP2] Executing INSERT command...
+  [CP2] INSERT command returned
+  [CP3] Waiting for command completion...
+  [CP3] Command completed
+  [CP4] ✓ INSERT executed successfully
+  [CP5] ✗ Block_075 - INSERT failed (no entity created)
+
+INTERPRETATION:
+- INSERT command ran successfully
+- But no entity was created in the drawing
+- Possible causes:
+  1. Block definition empty or invalid
+  2. Coordinates outside drawing bounds
+  3. Display/viewport issues
+- Action: Check Block_075.dwg or coordinates
+
+
+HOW TO USE CHECKPOINTS FOR DIAGNOSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Run Import and Watch Console
+  1. Command: MACROMANAGER
+  2. Select CSV and Block Library
+  3. Click: ► START IMPORT
+  4. DON'T CLOSE AutoCAD - watch the Visual LISP Console
+
+STEP 2: Look at Console Output
+  - Find the checkpoint messages ([CP1], [CP2], etc.)
+  - Find where the output STOPS
+  - That tells you where the failure happened
+
+STEP 3: Match Output to Pattern
+  - Crash between [CP2] statements = AutoCAD bug (c0000027)
+  - Error at [CP4] = Command error (check DWG file)
+  - Error at [CP5] = Entity not created (check coordinates)
+
+STEP 4: Take Action Based on Location
+  - If AutoCAD crash (c0000027):
+    → Note the last successful block number
+    → Use Batch Import starting from next block
+    → See: BATCH_IMPORT_GUIDE.txt
+
+  - If DWG file error:
+    → Check that specific DWG file
+    → Verify file isn't corrupted
+    → Re-export that block
+
+  - If entity creation error:
+    → Check CSV coordinates
+    → Verify coordinates are within drawing bounds
+    → Check if block definition is valid
+
+
+WHAT TO REPORT IF NEEDED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When diagnosing block insertion issues, provide:
+
+1. EXACT CHECKPOINT OUTPUT
+   - Copy the entire checkpoint sequence from console
+   - Show where it stops
+
+2. BLOCK INFORMATION
+   - Block name: ______
+   - Block number: ______ (of how many total)
+   - Block size: ______
+   - Block properties: ______
+
+3. CSV INFORMATION
+   - Total blocks in CSV: ______
+   - Successfully imported before error: ______
+   - Error occurred at block: ______
+
+4. SYSTEM INFORMATION
+   - AutoCAD version: ______
+   - Block Library folder size: ______
+   - Available disk space: ______
+
+
+COMMON SCENARIOS AND SOLUTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SCENARIO 1: Crash at Block 50 out of 369
+  CHECKPOINT: Stops after [CP2] "Executing INSERT command..."
+  CAUSE: AutoCAD bug (c0000027)
+  SOLUTION: Use batch import
+    - Import in batches of 20-30 blocks
+    - Complete blocks 1-49 first
+    - Then import blocks 50+ separately
+
+SCENARIO 2: All blocks fail at CP5 with "no entity created"
+  CHECKPOINT: All show [CP5] ✗ failed (no entity created)
+  CAUSE: Possibly coordinate system or block definition issue
+  SOLUTION:
+    - Check if coordinates are way too large
+    - Verify block library DWG files are valid
+    - Try importing just 1 block first
+
+SCENARIO 3: Alternating success and failure
+  CHECKPOINT: Mix of ✓ successful and ✗ failed
+  CAUSE: Some DWG files corrupt, others OK
+  SOLUTION:
+    - Note which specific blocks fail
+    - Re-export just those blocks
+    - Replace corrupted DWG files
+    - Retry import
+
+SCENARIO 4: First 10 blocks work, then crash
+  CHECKPOINT: [CP1-CP5] shows success 10 times, then crashes at CP2
+  CAUSE: Memory buildup or AutoCAD resource issue
+  SOLUTION: Use batch import to clear memory
+    - Run import in sessions of 10 blocks each
+    - Close and reopen drawing between batches
+    - This refreshes AutoCAD's memory
+
+
+CHECKPOINT OUTPUT INTERPRETATION MATRIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌────────────────────┬──────────────────────┬──────────────────────┐
+│ Last Checkpoint    │ Likely Cause         │ Solution             │
+├────────────────────┼──────────────────────┼──────────────────────┤
+│ (None - Immediate) │ CSV file error       │ Check CSV file       │
+│ [CP1] - Pre-INSERT │ CSV parsing problem  │ Verify CSV format    │
+│ [CP2] - Executing  │ AutoCAD crash (BUG)  │ Batch import method  │
+│ [CP3] - Completion │ Command hung         │ Try manual INSERT    │
+│ [CP4] - Executed   │ DWG file error       │ Re-export block      │
+│ [CP5] - Updated    │ Entity invalid       │ Check coordinates    │
+└────────────────────┴──────────────────────┴──────────────────────┘
+
+
+ENABLING CONSOLE OUTPUT IN AUTOCAD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To see the checkpoint messages while importing:
+
+1. Before importing, open Visual LISP Console:
+   - Tools > AutoLISP > Visual LISP Console
+   - Or press: Ctrl+Shift+P
+
+2. The console will show all (princ) messages in real-time
+
+3. When import runs, you'll see the checkpoint output
+
+4. If crash occurs, the console shows exactly where it stopped
+
+5. Take a screenshot of the console for troubleshooting
+
+
+═══════════════════════════════════════════════════════════════════════════
+MacroManager v5.13 - Checkpoint Diagnostics help identify import issues!
+═══════════════════════════════════════════════════════════════════════════

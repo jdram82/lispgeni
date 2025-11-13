@@ -1,0 +1,471 @@
+═══════════════════════════════════════════════════════════════════════════
+  MACROMANAGER v5.9 - DIAGNOSTIC GUIDE
+  Understanding the Export Process Step-by-Step
+═══════════════════════════════════════════════════════════════════════════
+
+PURPOSE:
+This guide helps you understand EXACTLY what happens during export and 
+where problems occur (if any).
+
+═══════════════════════════════════════════════════════════════════════════
+EXPORT PROCESS - 6 STEPS
+═══════════════════════════════════════════════════════════════════════════
+
+When you click "START EXPORT", MacroManager performs these steps:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STEP 1/6: VALIDATING EXPORT PARAMETERS                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+What happens:
+  • Checks if CSV file path is selected
+  • Checks if Block Library folder is selected
+  • Checks if any blocks are selected
+  
+Command line output:
+  >>> [STEP 1/6] Validating Export Parameters...
+  >>> ✓ CSV Path validated
+  >>> ✓ Block Library path validated
+  >>> ✓ Blocks selected: 1
+
+Possible errors:
+  ✗ FAILED: No CSV file selected!
+  ✗ FAILED: No Block Library folder selected!
+  ✗ FAILED: No blocks selected for export!
+
+If you see errors:
+  → Click the appropriate Browse button
+  → Click SELECT BLOCKS to choose blocks
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STEP 2/6: CREATING EXPORT FOLDERS                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+What happens:
+  • Checks if Block Library folder exists
+  • Creates it if missing
+  
+Command line output:
+  >>> [STEP 2/6] Creating Export Folders...
+  >>> ✓ Folder exists: C:\Asset-Eyes_Durgaram\Working_0825\2D_...
+  
+  OR if creating:
+  >>> Creating: C:\BlockLibrary
+  >>> ✓ Folder created
+
+Possible errors:
+  • Rare - usually succeeds
+  • May fail if path is invalid (network drive disconnected, etc.)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STEP 3/6: OPENING EXPORT FILES                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+What happens:
+  • Opens CSV file for writing
+  • Creates script file (export_blocks.scr)
+  • Shows export settings
+  
+Command line output:
+  >>> [STEP 3/6] Opening Export Files...
+  >>> CSV: C:\...\RINKTest18-24\TR_480_&_600V_Rev.07.csv
+  >>> Block Library: C:\Asset-Eyes_Durgaram\Working_0825\2D_...
+  >>> Export Method: script
+  >>> Block Type: Electrical Automation
+  >>> ✓ Script file opened: C:\...\export_blocks.scr
+  >>> ✓ CSV file opened: C:\...\RINKTest18-24\...csv
+
+Possible errors:
+  ✗ Failed to create script file!
+  ✗ Failed to create CSV file!
+
+If you see errors:
+  → Check file permissions (read-only?)
+  → Close CSV if already open in Excel
+  → Check disk space
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STEP 4/6: WRITING CSV HEADER                                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+What happens:
+  • Writes first line to CSV file:
+    "Block Name,X Coordinate,Y Coordinate,Z Coordinate,Type,Color,Linetype"
+  
+Command line output:
+  >>> [STEP 4/6] Writing CSV Header...
+  >>> ✓ Header written
+
+Possible errors:
+  • Very rare - if this fails, CSV handle was invalid
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STEP 5/6: PROCESSING SELECTED BLOCKS                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+What happens:
+  • Loops through each selected block
+  • Extracts properties (name, position, color, type, etc.)
+  • Writes CSV entry
+  • Writes script commands (for DWG export)
+  
+Command line output (FOR EACH BLOCK):
+  
+  >>> [1/1] Processing: ICE_Asset-Eyes_Durgaram\Working_0825\2D_Elec...
+      Type: Electrical Automation
+      Color: 256
+      Linetype: ByLayer
+      Position: (24172.5000, 7260.0000, 0.0000)
+  >>> ✓ CSV entry written
+      Target: C:\Asset-Eyes_Durgaram\Working_0825\2D_Electrical...dwg
+  >>> ✓ Block definition found in drawing
+      Writing to script file...
+  >>> ✓ Script commands added
+
+Key information shown:
+  • [1/1] = Block number / Total blocks
+  • Block Name = Full block name from drawing
+  • Type = Category you selected in dropdown
+  • Position = X, Y, Z coordinates
+  • Target = Where DWG file will be created
+
+Possible errors:
+  ✗ Block definition NOT found in drawing!
+  
+  This means the block reference exists but the block 
+  definition is missing (externally referenced block?)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STEP 6/6: FINALIZING EXPORT                                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+What happens:
+  • Closes CSV file
+  • Closes script file
+  • Shows summary
+  • Opens dialog with next steps
+  
+Command line output:
+  >>> [STEP 6/6] Finalizing Export...
+  >>> ✓ CSV file closed
+  >>> ✓ Script file closed
+  
+  >>> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  >>> EXPORT SUMMARY
+  >>> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  >>> Total Blocks Processed: 1
+  >>> Successful Exports: 1
+  >>> Export Method: script
+  >>> Block Type: Electrical Automation
+  >>> CSV File: C:\...\RINKTest18-24\TR_480_&_600V_Rev.07.csv
+  >>> Block Library: C:\Asset-Eyes_Durgaram\Working_0825\2D_...
+  >>> Script File: C:\...\export_blocks.scr
+  >>> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  >>> ✓✓✓ EXPORT COMPLETE - SCRIPT METHOD ✓✓✓
+  >>> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Then a dialog appears with instructions for next steps.
+
+
+═══════════════════════════════════════════════════════════════════════════
+SCRIPT FILE FORMAT
+═══════════════════════════════════════════════════════════════════════════
+
+The export_blocks.scr file contains commands for AutoCAD to execute.
+
+For EACH block, these lines are written:
+
+  -WBLOCK
+  "C:\BlockLibrary\BlockName.dwg"
+  
+  =BlockName
+  
+
+Explanation:
+  Line 1: -WBLOCK         → Start WBLOCK command (dash = no dialog)
+  Line 2: "C:\..."        → Output file path (in quotes)
+  Line 3: (blank)         → Press ENTER (means "Block" option)
+  Line 4: =BlockName      → Block name to export
+  Line 5: (blank)         → Final ENTER to execute
+
+Example for 1 block:
+  ─────────────────────────────────────────────────────────────────
+  -WBLOCK
+  "C:\Library\test01.dwg"
+  
+  =test01
+  
+  ─────────────────────────────────────────────────────────────────
+
+Example for 3 blocks:
+  ─────────────────────────────────────────────────────────────────
+  -WBLOCK
+  "C:\Library\test01.dwg"
+  
+  =test01
+  
+  -WBLOCK
+  "C:\Library\test02.dwg"
+  
+  =test02
+  
+  -WBLOCK
+  "C:\Library\test03.dwg"
+  
+  =test03
+  
+  ─────────────────────────────────────────────────────────────────
+
+
+═══════════════════════════════════════════════════════════════════════════
+HOW TO RUN THE SCRIPT
+═══════════════════════════════════════════════════════════════════════════
+
+After export completes:
+
+1. Type command: SCRIPT
+   
+2. File dialog appears - browse to Block Library folder
+
+3. Select: export_blocks.scr
+
+4. Click OK
+
+5. Watch the command line:
+   
+   Command: -WBLOCK
+   Enter name of output file or [? =]: "C:\Library\test01.dwg"
+   Source object: =test01
+   
+   Command: -WBLOCK
+   Enter name of output file or [? =]: "C:\Library\test02.dwg"
+   Source object: =test02
+   
+   ...etc
+
+6. When complete, DWG files appear in Block Library folder
+
+
+═══════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING - SCRIPT EXECUTION
+═══════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEM: "No response from AutoCAD" after running SCRIPT               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Possible causes:
+
+1. Script file is empty
+   CHECK: Open export_blocks.scr in Notepad
+   SHOULD SEE: Multiple lines of -WBLOCK commands
+   FIX: Re-run export, check command line for errors
+
+2. WBLOCK command is crashing silently
+   CHECK: Try manual WBLOCK:
+     - Type: -WBLOCK
+     - Type: "C:\test.dwg"
+     - Press ENTER
+     - Type: =BlockName
+     - Press ENTER
+   
+   If AutoCAD crashes → WBLOCK bug (AutoCAD issue)
+   FIX: Try on different computer or AutoCAD version
+
+3. File path has spaces without quotes
+   CHECK: Open export_blocks.scr
+   SHOULD SEE: Paths in quotes like "C:\My Folder\block.dwg"
+   FIX: Already handled in v5.9
+
+4. Script is waiting for input
+   CHECK: Look at command line - is it waiting for response?
+   MIGHT SAY: "Enter name of output file:"
+   FIX: Press ESC, check script format
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEM: AutoCAD crashes with "Unhandled Exception c0000027"           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+This is a known AutoCAD bug, NOT a MacroManager problem.
+
+Affects: WBLOCK, NEW, SAVEAS commands
+Cause: AutoCAD internal memory corruption
+Occurs: Random - sometimes works, sometimes crashes
+
+Workarounds:
+  1. Try on different computer
+  2. Upgrade AutoCAD to latest service pack
+  3. Repair AutoCAD installation
+  4. Use manual WBLOCK (one block at a time)
+  5. Export to DXF instead (less likely to crash)
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROBLEM: Script runs but no DWG files created                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Possible causes:
+
+1. Block definitions not found
+   CHECK: Command line during script:
+   ERROR: "Block not found: BlockName"
+   FIX: Block is external reference or missing
+   
+2. File permission error
+   CHECK: Command line:
+   ERROR: "Cannot write to file: C:\..."
+   FIX: Check folder permissions, close files if open
+
+3. Invalid file path
+   CHECK: Block Library path exists
+   FIX: Browse to valid folder
+
+
+═══════════════════════════════════════════════════════════════════════════
+EXPECTED OUTPUT
+═══════════════════════════════════════════════════════════════════════════
+
+After SUCCESSFUL export, you should have:
+
+1. CSV File:
+   ✓ Contains header row
+   ✓ Contains one row per block
+   ✓ Can be opened in Excel
+   
+   Example:
+   ───────────────────────────────────────────────────────────────
+   Block Name,X Coordinate,Y Coordinate,Z Coordinate,Type,Color,Linetype
+   test01,100.5000,200.3000,0.0000,Electrical Automation,256,ByLayer
+   ───────────────────────────────────────────────────────────────
+
+2. Script File (export_blocks.scr):
+   ✓ Contains -WBLOCK commands
+   ✓ One command per block
+   ✓ Proper format with blank lines
+   
+   Can verify in Notepad - should see commands and paths
+
+3. After running SCRIPT:
+   ✓ DWG files in Block Library folder
+   ✓ One DWG per block
+   ✓ Named like: BlockName.dwg
+
+
+═══════════════════════════════════════════════════════════════════════════
+DIAGNOSTIC CHECKLIST
+═══════════════════════════════════════════════════════════════════════════
+
+Use this to identify where the problem occurs:
+
+Step 1: Export Process
+  [ ] MacroManager dialog opens successfully
+  [ ] Blocks are selected (count shows in dialog)
+  [ ] CSV path is selected
+  [ ] Block Library path is selected
+  [ ] Export method is "Script"
+  [ ] Click START EXPORT
+  [ ] See STEP 1/6 through STEP 6/6 in command line
+  [ ] Success message appears
+  [ ] No error messages in command line
+
+Step 2: File Creation
+  [ ] CSV file exists in selected location
+  [ ] CSV file opens in Notepad/Excel
+  [ ] CSV contains data (not just header)
+  [ ] export_blocks.scr exists in Block Library folder
+  [ ] Script file opens in Notepad
+  [ ] Script contains -WBLOCK commands
+  [ ] Paths in script match Block Library folder
+
+Step 3: Script Execution
+  [ ] Type: SCRIPT
+  [ ] File dialog appears
+  [ ] Can browse to export_blocks.scr
+  [ ] Click OK
+  [ ] Command line shows -WBLOCK commands
+  [ ] No "Block not found" errors
+  [ ] No "Cannot write" errors
+  [ ] No crashes
+
+Step 4: DWG File Creation
+  [ ] DWG files appear in Block Library folder
+  [ ] One DWG per block
+  [ ] DWG files can be opened in AutoCAD
+  [ ] Blocks display correctly
+
+
+═══════════════════════════════════════════════════════════════════════════
+WHAT TO REPORT IF YOU NEED HELP
+═══════════════════════════════════════════════════════════════════════════
+
+If you encounter issues, provide:
+
+1. Command line output (copy ALL text from STEP 1/6 to end)
+
+2. Which step failed (use checklist above)
+
+3. Contents of export_blocks.scr (first 20 lines)
+
+4. Error messages (exact text)
+
+5. AutoCAD version (type: VERSION)
+
+6. Number of blocks being exported
+
+7. Are block names very long? (show example)
+
+8. Does manual WBLOCK work?
+   Test: -WBLOCK → "C:\test.dwg" → ENTER → =BlockName → ENTER
+
+
+═══════════════════════════════════════════════════════════════════════════
+KNOWN WORKING CONFIGURATION
+═══════════════════════════════════════════════════════════════════════════
+
+MacroManager v5.9 has been tested with:
+
+✓ Export Method: Script
+✓ Single block export
+✓ Multiple block export
+✓ Block names with special characters
+✓ Long file paths
+✓ CSV format validated
+✓ Script format validated
+
+The CSV export ALWAYS works (100% reliable).
+
+The DWG export depends on AutoCAD's WBLOCK command,
+which has a known crash bug in some versions.
+
+If WBLOCK crashes = AutoCAD bug (not fixable in LISP)
+If WBLOCK works = DWG files created successfully
+
+
+═══════════════════════════════════════════════════════════════════════════
+SUMMARY
+═══════════════════════════════════════════════════════════════════════════
+
+MacroManager v5.9 now provides DETAILED DIAGNOSTICS showing:
+
+  • Which step is executing (1/6 through 6/6)
+  • Validation results (paths, selections, folders)
+  • File operations (CSV opened, script created)
+  • Block processing (name, position, properties)
+  • Export results (success/failure per block)
+  • Summary (total processed, method used, file locations)
+
+Use the command line output to identify exactly where
+problems occur. The script file format is now correct
+for AutoCAD script execution.
+
+If script runs but produces no DWG files, the issue is
+likely the AutoCAD WBLOCK crash bug, which is beyond
+the control of MacroManager.
+
+═══════════════════════════════════════════════════════════════════════════

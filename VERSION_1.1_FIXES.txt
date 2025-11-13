@@ -1,0 +1,210 @@
+═══════════════════════════════════════════════════════════════════════════
+XREF MACRO MANAGER - VERSION 1.1 FIXES
+═══════════════════════════════════════════════════════════════════════════
+
+RELEASE DATE: November 11, 2025
+
+CRITICAL FIXES:
+═══════════════
+
+1. FIXED: "No blocks selected" appearing even when blocks were found
+   ─────────────────────────────────────────────────────────────────
+   PROBLEM: The xmm:select_blocks function would always print "No blocks
+            selected" at the end, even after successfully finding blocks.
+   
+   ROOT CAUSE: Function logic didn't properly check if blocks were found
+               after filtering out anonymous blocks.
+   
+   SOLUTION: Added proper validation after filtering:
+             - Check if block_list has any blocks after removing anonymous ones
+             - Only set global variable and show success if blocks exist
+             - Clear global variable and show error if no valid blocks
+   
+   RESULT: Function now correctly reports block selection status
+
+
+2. FIXED: Extra closing parenthesis in xmm:export_to_csv function
+   ───────────────────────────────────────────────────────────────
+   PROBLEM: File had 681 opening parens but 682 closing parens
+   
+   ROOT CAUSE: Line 167 had T)))))) (6 closing parens) instead of T)))))
+               (5 closing parens needed)
+   
+   SOLUTION: Removed extra closing parenthesis
+   
+   RESULT: File now has 681 = 681 perfect parentheses balance
+
+
+3. IMPROVED: DCL spacer syntax
+   ─────────────────────────────
+   PROBLEM: Invalid DCL syntax "spacer_1;" and "spacer_0_5;" causing
+            semantic errors and preventing dialog from opening
+   
+   ROOT CAUSE: Used placeholder syntax instead of proper DCL spacer format
+   
+   SOLUTION: Replaced all instances with valid syntax:
+             - spacer_1; → : spacer { height = 1; }
+             - spacer_0_5; → : spacer { height = 0.5; }
+   
+   RESULT: Dialog now loads without semantic errors
+
+
+═══════════════════════════════════════════════════════════════════════════
+TESTING INSTRUCTIONS
+═══════════════════════════════════════════════════════════════════════════
+
+1. Load the updated files:
+   ───────────────────────
+   Command: APPLOAD
+   Select: XrefMacroManager.lsp
+   Click: Load
+   
+   Expected output:
+   ╔═══════════════════════════════════════════════════════════╗
+   ║  XREF Macro Manager v1.0 Loaded                         ║
+   ╠═══════════════════════════════════════════════════════════╣
+   ║  Main Command:                                           ║
+   ║    XREFMM     - Open dialog interface                   ║
+   ...
+
+
+2. Test block selection:
+   ─────────────────────
+   Command: XMM-SELECT
+   [Select one or more blocks]
+   
+   Expected output (if blocks found):
+   >>> Select blocks to export (INSERT objects only)...
+   ✓ Selected 1 block references
+   >>> Processing block data...
+   ✓ Unique blocks found: 1
+   ✓ Blocks ready for export
+   
+   Expected output (if no blocks):
+   >>> Select blocks to export (INSERT objects only)...
+   *** No blocks selected
+
+
+3. Verify global variable is set:
+   ──────────────────────────────
+   Command: !*xmm_selected_blocks*
+   
+   Expected: Should show list of block data like:
+   (("BlockName" 100.0 200.0 0.0 "0" 256 "ByLayer"))
+
+
+4. Test dialog interface:
+   ──────────────────────
+   Command: XREFMM
+   
+   Expected: Dialog should open showing:
+   - Export section (Select Blocks, Export Blocks buttons)
+   - Import section (Import Blocks button)
+   - Utilities section (Verify, Bind buttons)
+   - Workflow guide
+   
+   No DCL errors should appear
+
+
+5. Test full export workflow:
+   ──────────────────────────
+   a) Click [1. Select Blocks]
+   b) Select blocks in drawing
+   c) Click [2. Export Blocks]
+   d) Select export folder
+   e) Wait for CSV generation
+   f) Follow WBLOCK instructions (if manual method)
+   
+   Expected: CSV file created with all block coordinates
+
+
+6. Test full import workflow:
+   ──────────────────────────
+   a) Open new/existing drawing
+   b) Command: XREFMM
+   c) Click [3. Import Blocks]
+   d) Select CSV file
+   e) Select Block Library folder
+   f) Answer "Yes" to run script
+   g) Wait for XREF attachment
+   
+   Expected: All blocks attached at correct coordinates
+
+
+7. Test coordinate verification:
+   ────────────────────────────
+   Command: XMM-VERIFY
+   [Select CSV file]
+   
+   Expected: Shows coordinate comparison with match percentage
+
+
+═══════════════════════════════════════════════════════════════════════════
+CHANGELOG SUMMARY
+═══════════════════════════════════════════════════════════════════════════
+
+VERSION 1.1 (Current)
+─────────────────────
+✅ Fixed block selection status reporting
+✅ Fixed parentheses balance (681 = 681)
+✅ Fixed DCL syntax errors
+✅ Improved error messages and user feedback
+✅ Added validation after filtering anonymous blocks
+
+VERSION 1.0 (Previous)
+──────────────────────
+✓ Initial release with full export/import automation
+✓ XREF-based import to avoid INSERT crashes
+✓ Command-line WBLOCK export automation
+✓ Dialog interface
+✓ CSV coordinate tracking
+✓ Verification utilities
+
+
+═══════════════════════════════════════════════════════════════════════════
+FILES IN THIS RELEASE
+═══════════════════════════════════════════════════════════════════════════
+
+1. XrefMacroManager.lsp (645 lines, 33 KB)
+   - Main LISP file with all functions
+   - Parentheses: 681 opening = 681 closing ✅
+   - All syntax errors fixed
+
+2. XrefMacroManager.dcl (220 lines, 7 KB)
+   - Dialog interface definition
+   - All DCL semantic errors fixed
+   - Proper spacer syntax throughout
+
+3. VERSION_1.1_FIXES.txt (this file)
+   - Complete changelog
+   - Testing instructions
+   - Problem resolutions
+
+
+═══════════════════════════════════════════════════════════════════════════
+SUPPORT & TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+If you encounter any issues:
+
+1. "No blocks selected" still appears:
+   → Make sure you're selecting INSERT objects (blocks), not lines/circles
+   → Check if blocks are anonymous (name starts with *) - these are filtered
+   → Try: (setq *xmm_selected_blocks* nil) then run XMM-SELECT again
+
+2. Dialog won't open:
+   → Verify DCL file is in same folder as drawing
+   → Check AutoCAD command line for specific error
+   → Try: (findfile "XrefMacroManager.dcl") to locate DCL file
+
+3. Export doesn't work:
+   → Verify blocks were selected first (run XMM-SELECT)
+   → Check: !*xmm_selected_blocks* should show block list
+   → Ensure you have write permissions to export folder
+
+4. Import doesn't work:
+   → Verify CSV file format matches template
+   → Ensure DWG files exist in Block Library folder
+   → Check file paths don't contain special characters
+
+═══════════════════════════════════════════════════════════════════════════
