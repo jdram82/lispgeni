@@ -25,13 +25,13 @@ ucbmanager : dialog {
         
         : radio_button {
           key = "mode_export";
-          label = "📤 Export";
+          label = "Export";
           value = "1";
         }
         
         : radio_button {
           key = "mode_import";
-          label = "📥 Import";
+          label = "Import";
         }
       }
       
@@ -48,13 +48,13 @@ ucbmanager : dialog {
         
         : radio_button {
           key = "type_blocks";
-          label = "🔲 Block Definitions";
+          label = "Block Definitions";
           value = "1";
         }
         
         : radio_button {
           key = "type_circuits";
-          label = "⚡ Circuit Assemblies";
+          label = "Circuit Assemblies";
         }
       }
       
@@ -237,13 +237,13 @@ ucbmanager : dialog {
         : row {
           : button {
             key = "btn_refresh_list";
-            label = "↻ Refresh";
+            label = "Refresh";
             fixed_width = true;
             width = 12;
           }
           : button {
             key = "btn_preview_item";
-            label = "👁 Preview";
+            label = "Preview";
             fixed_width = true;
             width = 12;
           }
