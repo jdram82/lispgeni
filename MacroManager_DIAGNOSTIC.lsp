@@ -376,15 +376,18 @@
                  (princ " ✓")
                  
                  (princ "\n  Step 3: Executing WBLOCK command...")
+                 (princ (strcat "\n    Command: ._-WBLOCK"))
+                 (princ (strcat "\n    File: " file_path))
+                 (princ (strcat "\n    Block: " block_name))
                  (setq result
                    (vl-catch-all-apply
-                     '(lambda ()
+                     (function (lambda ()
                         (command "._-WBLOCK" file_path "=" block_name)
                         (princ "\n    Waiting for command completion...")
                         (while (> (getvar "CMDACTIVE") 0)
                           (command ""))
                         (princ " ✓")
-                        T)))
+                        T))))
                  
                  (if (vl-catch-all-error-p result)
                    (princ (strcat "\n    ✗ ERROR: " (vl-catch-all-error-message result)))
@@ -400,15 +403,17 @@
                  (princ " ✓")
                  
                  (princ "\n  Step 2: Executing vl-cmdf WBLOCK...")
+                 (princ (strcat "\n    File: " file_path))
+                 (princ (strcat "\n    Block: " block_name))
                  (setq result
                    (vl-catch-all-apply
-                     '(lambda ()
+                     (function (lambda ()
                         (vl-cmdf "._-WBLOCK" file_path "=" block_name)
                         (princ "\n    Waiting for command completion...")
                         (while (> (getvar "CMDACTIVE") 0)
                           (vl-cmdf ""))
                         (princ " ✓")
-                        T)))
+                        T))))
                  
                  (if (vl-catch-all-error-p result)
                    (princ (strcat "\n    ✗ ERROR: " (vl-catch-all-error-message result)))
@@ -449,7 +454,7 @@
                      (princ "\n  Step 4: Executing script...")
                      (setq result
                        (vl-catch-all-apply
-                         '(lambda ()
+                         (function (lambda ()
                             (command "._SCRIPT" script_path)
                             (princ "\n    Waiting for script completion...")
                             (setq timeout 0)
@@ -457,7 +462,7 @@
                               (command "")
                               (setq timeout (1+ timeout)))
                             (princ (strcat " (loops: " (itoa timeout) ")"))
-                            T)))
+                            T))))
                      
                      (if (vl-catch-all-error-p result)
                        (princ (strcat "\n    ✗ ERROR: " (vl-catch-all-error-message result)))
@@ -467,9 +472,11 @@
                 ;; Method 3: ObjectDBX
                 ((= method_num 3)
                  (princ "\n  Step 1: Getting ActiveX objects...")
+                 (princ (strcat "\n    File: " file_path))
+                 (princ (strcat "\n    Block: " block_name))
                  (setq result
                    (vl-catch-all-apply
-                     '(lambda ( / acad doc)
+                     (function (lambda ( / acad doc)
                         (setq acad (vlax-get-acad-object))
                         (princ " ✓ ACAD object")
                         (setq doc (vla-get-activedocument acad))
@@ -478,7 +485,7 @@
                         (princ "\n  Step 2: Executing vla-wblock...")
                         (vla-wblock doc file_path block_name)
                         (princ " ✓")
-                        T)))
+                        T))))
                  
                  (if (vl-catch-all-error-p result)
                    (princ (strcat "\n    ✗ ERROR: " (vl-catch-all-error-message result)))
@@ -494,15 +501,17 @@
                  (princ " ✓")
                  
                  (princ "\n  Step 2: Executing COMMAND WBLOCK...")
+                 (princ (strcat "\n    File: " file_path))
+                 (princ (strcat "\n    Block: " block_name))
                  (setq result
                    (vl-catch-all-apply
-                     '(lambda ()
+                     (function (lambda ()
                         (command "._-WBLOCK" file_path "=" block_name)
                         (princ "\n    Waiting for command completion...")
                         (while (> (getvar "CMDACTIVE") 0)
                           (command ""))
                         (princ " ✓")
-                        T)))
+                        T))))
                  
                  (if (vl-catch-all-error-p result)
                    (princ (strcat "\n    ✗ ERROR: " (vl-catch-all-error-message result)))
@@ -586,7 +595,7 @@
             (progn
               (setq result
                 (vl-catch-all-apply
-                  '(lambda ()
+                  (function (lambda ()
                      (command "._SCRIPT" script_path)
                      (princ "\n  Waiting for script completion...")
                      (setq timeout 0)
@@ -594,7 +603,7 @@
                        (command "")
                        (setq timeout (1+ timeout)))
                      (princ (strcat " (loops: " (itoa timeout) ")"))
-                     T)))
+                     T))))
               
               (if (vl-catch-all-error-p result)
                 (princ (strcat "\n  ✗ ERROR: " (vl-catch-all-error-message result)))
