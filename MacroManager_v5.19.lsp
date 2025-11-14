@@ -7,8 +7,6 @@
 ;;   ✅ FIXED: WBLOCK single command call - works with spaces in paths and block names
 ;;   ✅ TESTED: Confirmed working with AutoCAD Electrical 2024
 ;;   ✅ VERIFIED: Block exports with spaces (e.g., 'LM105 Analog IC') work correctly
-;;   ✅ DOCUMENTED: Comprehensive documentation for all methods
-;;   ✅ TESTING: Complete testing guide for method comparison
 ;;
 ;; CRITICAL FIXES in v5.17:
 ;;   ✅ FIXED: AutoCAD Electrical "Unhandled Exception" crash during export
@@ -62,7 +60,7 @@
 ;;   ✓ STRING= function replaced with EQUAL
 ;;
 ;; USAGE:
-;;   (load "MacroManager_v5.18.lsp")
+;;   (load "MacroManager_v5.17.lsp")
 ;;   Command: MACROMANAGER
 ;;
 ;; ═══════════════════════════════════════════════════════════════════════════
@@ -83,23 +81,12 @@
 ;; UTILITY: Platform Detection
 ;; ═══════════════════════════════════════════════════════════════════════════
 
-(defun mm:detect_platform (/ acadver product acet_test wd_test)
+(defun mm:detect_platform (/ acadver product)
   (setq acadver (getvar "ACADVER"))
   (setq product (getvar "PRODUCT"))
-  
-  ;; Additional detection methods for AutoCAD Electrical
-  ;; Check for ACET functions (AutoCAD Electrical Toolkit)
-  (setq acet_test (and (findfile "acetutil.arx") T))
-  
-  ;; Check for WD_ commands (Wire Design - Electrical specific)
-  (setq wd_test (or 
-    (wcmatch (strcase product) "*ELECTRICAL*")
-    (and (getvar "WDPROJECTNAMEEX") T)  ; Electrical project variable
-    acet_test))
-  
   (cond
     ((wcmatch (strcase product) "*BRICSCAD*") "BRICSCAD")
-    (wd_test "ACADE")  ; AutoCAD Electrical detected
+    ((wcmatch (strcase product) "*ELECTRICAL*") "ACADE")  ; AutoCAD Electrical
     ((wcmatch (strcase product) "*AUTOCAD*") "AUTOCAD")
     (T "UNKNOWN")
   )
@@ -124,7 +111,7 @@
 (defun c:MACROMANAGER ( / dcl_id result dcl_path drawing_path)
   
   (princ "\n╔═══════════════════════════════════════════════════════════╗")
-  (princ "\n║  Macro Manager v5.18 - METHOD TESTING RELEASE           ║")
+  (princ "\n║  Macro Manager v5.17 - CROSS-PLATFORM COMPATIBLE        ║")
   (princ "\n║                                                           ║")
   (princ "\n║  ✅ FIXED: AutoCAD Electrical crash                     ║")
   (princ "\n║  ✅ FIXED: BricsCAD import arguments error              ║")
@@ -145,8 +132,8 @@
   ;; Try multiple DCL file names
   (setq dcl_path nil)
   (cond
-    ((findfile (strcat drawing_path "MacroManager_v5.18.dcl"))
-     (setq dcl_path (strcat drawing_path "MacroManager_v5.18.dcl")))
+    ((findfile (strcat drawing_path "MacroManager_v5.17.dcl"))
+     (setq dcl_path (strcat drawing_path "MacroManager_v5.17.dcl")))
     ((findfile (strcat drawing_path "MacroManager_v5.16.dcl"))
      (setq dcl_path (strcat drawing_path "MacroManager_v5.16.dcl")))
     ((findfile (strcat drawing_path "MacroManager_v5.14.dcl"))
@@ -811,38 +798,68 @@
       
       ;; Use different methods based on platform
       (cond
-        ;; AutoCAD Electrical: Use simple COMMAND method (same pattern as Method 4)
+        ;; AutoCAD Electrical: Use SCRIPT method (most stable for ACADE)
         ((equal platform "ACADE")
-         (princ "\n      → WBLOCK (AutoCAD Electrical mode - COMMAND method)...")
+         (princ "\n      → WBLOCK (AutoCAD Electrical mode - SCRIPT method)...")
          (setq result
            (vl-catch-all-apply
-             (function (lambda ()
+             (function (lambda ( / script_path script_handle)
                ;; Save system variables
                (setq old_cmdecho (getvar "CMDECHO"))
                (setq old_filedia (getvar "FILEDIA"))
                (setq old_expert (getvar "EXPERT"))
                (setq old_attreq (getvar "ATTREQ"))
+               (setq old_osmode (getvar "OSMODE"))
                
                ;; Set for silent operation
                (setvar "CMDECHO" 0)
                (setvar "FILEDIA" 0)
                (setvar "EXPERT" 5)
                (setvar "ATTREQ" 1)    ; Enable attributes for ACADE
+               (setvar "OSMODE" 0)     ; Disable object snap
                
                ;; Delete existing file
                (if (findfile dwg_path)
                  (vl-file-delete dwg_path))
                
-               ;; Execute WBLOCK - single command call works with spaces
-               (command "._-WBLOCK" dwg_path "=" block_name)
+               ;; Create temporary script file for this block
+               (setq script_path (strcat (getenv "TEMP") "\\wblock_temp_" block_name ".scr"))
+               (setq script_handle (open script_path "w"))
                
-               ;; Wait for completion
-               (while (> (getvar "CMDACTIVE") 0)
-                 (command ""))" old_expert)
+               (if script_handle
+                 (progn
+                   ;; Write WBLOCK command to script
+                   (write-line "-WBLOCK" script_handle)
+                   (write-line dwg_path script_handle)
+                   (write-line (strcat "=" block_name) script_handle)
+                   (write-line "" script_handle)
+                   (close script_handle)
+                   
+                   ;; Execute script
+                   (command "_.SCRIPT" script_path)
+                   
+                   ;; Wait for completion with timeout
+                   (setq timeout 0)
+                   (while (and (> (getvar "CMDACTIVE") 0) (< timeout 200))
+                     (command "")
+                     (setq timeout (1+ timeout))
+                   )
+                   
+                   ;; Clean up script file
+                   (if (findfile script_path)
+                     (vl-file-delete script_path))
+                 )
+                 (princ "\n      ✗ Could not create temp script")
+               )
+               
+               ;; Restore system variables (ALWAYS)
+               (setvar "CMDECHO" old_cmdecho)
+               (setvar "FILEDIA" old_filedia)
+               (setvar "EXPERT" old_expert)
                (setvar "ATTREQ" old_attreq)
+               (setvar "OSMODE" old_osmode)
                
                ;; Check success
-               (princ (strcat "\n      Checking: " dwg_path))
                (if (findfile dwg_path)
                  (progn
                    (princ (strcat " ✓ " (rtos (/ (- (getvar "MILLISECS") start_time) 1000.0) 2 1) "s"))
@@ -888,7 +905,7 @@
                (if (findfile dwg_path)
                  (vl-file-delete dwg_path))
                
-               ;; Execute WBLOCK with timeout protection - single call works with spaces
+               ;; Execute WBLOCK with timeout protection
                (vl-cmdf "._-WBLOCK" dwg_path "=" block_name)
                
                ;; Wait with 30-second timeout (prevents infinite hangs)
@@ -1223,14 +1240,7 @@
        (princ "\n\n>>> [STEP 3/6] Opening Export Files...")
        (princ (strcat "\n>>> CSV: " csv_path))
        (princ (strcat "\n>>> Block Library: " block_library_path))
-       (princ (strcat "\n>>> Export Method: " 
-                      (cond
-                        ((= *export_method* 0) "0 - Platform-Optimized")
-                        ((= *export_method* 1) "1 - Direct vl-cmdf (Forced)")
-                        ((= *export_method* 2) "2 - Script Method")
-                        ((= *export_method* 3) "3 - ObjectDBX/VLA")
-                        ((= *export_method* 4) "4 - Basic COMMAND")
-                        (T (strcat "Unknown (" (itoa *export_method*) ")")))))
+       (princ (strcat "\n>>> Export Method: " *export_method*))
        (princ (strcat "\n>>> Block Type: " *block_type*))
        
        ;; Create script file for WBLOCK commands
@@ -1303,7 +1313,6 @@
          
          ;; Create DWG export based on selected method
          (setq dwg_path (strcat block_library_path "\\" block_name ".dwg"))
-         (setq direct_result nil)  ; Initialize result variable
          (princ (strcat "\n    Target: " dwg_path))
          
          (if (tblsearch "BLOCK" block_name)
@@ -1325,13 +1334,7 @@
                ;; Method 2: Script Method
                ((= *export_method* 2)
                 (princ "\n    Adding to Script file...")
-                ;; Script format: -WBLOCK (no underscore!) / filepath / = / blockname / blank line
-                (write-line "-WBLOCK" script_handle)
-                (write-line dwg_path script_handle)
-                (write-line "=" script_handle)
-                (write-line block_name script_handle)
-                (write-line "" script_handle)  ; Blank line to accept defaults
-                (princ " ✓")
+                (write-line (strcat "_WBLOCK\n" dwg_path "\n=" block_name "\n") script_handle)
                 (setq success_count (1+ success_count)))
                
                ;; Method 3: ObjectDBX/VLA Method
@@ -1979,9 +1982,9 @@
 ;; ═══════════════════════════════════════════════════════════════════════════
 
 (princ "\n╔═══════════════════════════════════════════════════════════╗")
-(princ "\n║  ✓ MacroManager v5.18 loaded!                           ║")
+(princ "\n║  ✓ MacroManager v5.17 loaded!                           ║")
 (princ "\n║                                                           ║")
-(princ "\n║  NEW in v5.18: ALL METHODS + COMPREHENSIVE DOCS!        ║")
+(princ "\n║  NEW in v5.17: CROSS-PLATFORM COMPATIBILITY!            ║")
 (princ "\n║  ✅ AutoCAD Electrical crash FIXED!                     ║")
 (princ "\n║  ✅ BricsCAD import arguments FIXED!                    ║")
 (princ "\n║  ✅ Platform auto-detection enabled                     ║")

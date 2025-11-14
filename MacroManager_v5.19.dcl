@@ -2,10 +2,6 @@
 // PROFESSIONAL MACRO MANAGER v5.19 DCL
 // Cross-Platform Compatible - AutoCAD Electrical + BricsCAD
 // ═══════════════════════════════════════════════════════════════════════════
-// NEW in v5.19:
-//   - Dropdown menus for all export/import methods (5 options each)
-//   - Complete method testing interface
-//   - Comprehensive documentation support
 // NEW in v5.17:
 //   - FIXED: AutoCAD Electrical "Unhandled Exception" crash during export
 //   - FIXED: BricsCAD "too few/too many arguments" error on import
@@ -16,7 +12,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 macromanager : dialog {
-  label = "Professional Macro Manager v5.18 - Method Testing";
+  label = "Professional Macro Manager v5.17 - Cross-Platform";
   initial_focus = "export_mode_single";
   
   : boxed_column {
