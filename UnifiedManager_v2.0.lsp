@@ -464,54 +464,52 @@
 
 (defun ucb:init_dialog ( / )
   ;; Set operation mode
-  (set_tile "op_export" (if (= *ucb_operation_mode* "export") "1" "0"))
-  (set_tile "op_import" (if (= *ucb_operation_mode* "import") "1" "0"))
+  (set_tile "mode_export" (if (= *ucb_operation_mode* "export") "1" "0"))
+  (set_tile "mode_import" (if (= *ucb_operation_mode* "import") "1" "0"))
   
   ;; Set content type
   (set_tile "type_blocks" (if (= *ucb_content_type* "blocks") "1" "0"))
   (set_tile "type_circuits" (if (= *ucb_content_type* "circuits") "1" "0"))
   
   ;; Initialize export panel
-  (set_tile "export_mode" "0")
+  (set_tile "export_single" "1")
   (start_list "export_method")
   (mapcar 'add_list *ucb_export_methods*)
   (end_list)
   (set_tile "export_method" (itoa *ucb_export_method*))
   
-  (start_list "category_list")
+  (start_list "export_category")
   (mapcar 'add_list *ucb_categories*)
   (end_list)
-  (set_tile "category_list" "0")
+  (set_tile "export_category" "0")
   
   ;; Initialize import panel
-  (set_tile "import_source" "0")
+  (set_tile "import_from_library" "1")
   (start_list "import_method")
   (mapcar 'add_list *ucb_import_methods*)
   (end_list)
   (set_tile "import_method" (itoa *ucb_import_method*))
   
-  (set_tile "insert_scale" "1.0")
-  (set_tile "insert_rotation" "0.0")
+  (set_tile "import_scale" "1.0")
+  (set_tile "import_rotation" "0.0")
   
   ;; Setup callbacks
-  (action_tile "op_export" "(setq *ucb_operation_mode* \"export\") (ucb:mode_changed)")
-  (action_tile "op_import" "(setq *ucb_operation_mode* \"import\") (ucb:mode_changed)")
+  (action_tile "mode_export" "(setq *ucb_operation_mode* \"export\") (ucb:mode_changed)")
+  (action_tile "mode_import" "(setq *ucb_operation_mode* \"import\") (ucb:mode_changed)")
   (action_tile "type_blocks" "(setq *ucb_content_type* \"blocks\") (ucb:type_changed)")
   (action_tile "type_circuits" "(setq *ucb_content_type* \"circuits\") (ucb:type_changed)")
   
   (action_tile "export_method" "(setq *ucb_export_method* (atoi $value))")
   (action_tile "import_method" "(setq *ucb_import_method* (atoi $value))")
-  (action_tile "category_list" "(setq *ucb_category* (nth (atoi $value) *ucb_categories*))")
+  (action_tile "export_category" "(setq *ucb_category* (nth (atoi $value) *ucb_categories*))")
   
-  (action_tile "btn_browse" "(ucb:browse_folder)")
-  (action_tile "btn_refresh" "(ucb:refresh_library_list)")
+  (action_tile "btn_browse_folder" "(ucb:browse_folder)")
+  (action_tile "btn_refresh_list" "(ucb:refresh_library_list)")
   
-  (action_tile "btn_export_single" "(ucb:do_export_single)")
-  (action_tile "btn_export_batch" "(ucb:do_export_batch)")
-  (action_tile "btn_export_all" "(ucb:do_export_all)")
+  (action_tile "btn_start_export" "(ucb:do_export_single)")
   
-  (action_tile "btn_import" "(ucb:do_import)")
-  (action_tile "btn_import_csv" "(ucb:do_import_csv)")
+  (action_tile "btn_start_import" "(ucb:do_import)")
+  (action_tile "btn_load_csv" "(ucb:do_import_csv)")
   
   (action_tile "cancel" "(done_dialog 0)")
   (action_tile "accept" "(done_dialog 1)")
@@ -534,7 +532,7 @@
     (strcat "Mode: " *ucb_content_type* " | Operation: " *ucb_operation_mode*)))
 
 (defun ucb:refresh_library_list ( / file_list)
-  (start_list "library_list")
+  (start_list "import_list")
   
   (setq file_list (ucb:get_library_files *ucb_content_type*))
   (mapcar '(lambda (item) 
@@ -550,7 +548,7 @@
   (if folder
     (progn
       (setq *ucb_library_folder* (vl-filename-directory folder))
-      (set_tile "library_path" *ucb_library_folder*)
+      (set_tile "library_folder" *ucb_library_folder*)
       (ucb:refresh_library_list))))
 
 
@@ -643,7 +641,7 @@
 (defun ucb:do_import ( / selected_items file_list item_data item_path insert_pt scale rotation)
   (done_dialog 2)
   
-  (setq selected_items (get_tile "library_list"))
+  (setq selected_items (get_tile "import_list"))
   (setq file_list (ucb:get_library_files *ucb_content_type*))
   
   (if (and selected_items file_list)
@@ -651,8 +649,8 @@
       (setq item_data (nth (atoi selected_items) file_list))
       (setq item_path (caddr item_data))
       
-      (setq scale (atof (get_tile "insert_scale")))
-      (setq rotation (atof (get_tile "insert_rotation")))
+      (setq scale (atof (get_tile "import_scale")))
+      (setq rotation (atof (get_tile "import_rotation")))
       
       (if (= *ucb_content_type* "blocks")
         (progn
