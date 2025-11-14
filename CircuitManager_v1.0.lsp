@@ -13,10 +13,100 @@
 (if (not *export_mode*) 
   (setq *export_mode* 0))  ; 0=single, 1=batch
 
+(if (not *circuit_csv_file*)
+  (setq *circuit_csv_file* ""))
+
 ;; Circuit types for categorization
 (setq *circuit_types* '("General" "Control_Panel" "Motor_Circuit" "Power_Distribution" 
                         "Lighting_Circuit" "Instrumentation" "Communication" "Safety_System"
                         "HVAC_System" "Custom"))
+
+;; CSV file for coordinate tracking
+(defun cm:get_csv_path ( / )
+  (strcat *circuit_export_folder* "\\Circuit_Coordinates.csv"))
+
+;; Save circuit info to CSV
+(defun cm:save_to_csv (circuit_name circuit_type dwg_file base_pt insert_pt / csv_path csv_handle date_str time_str)
+  (setq csv_path (cm:get_csv_path))
+  
+  ;; Create CSV with header if it doesn't exist
+  (if (not (findfile csv_path))
+    (progn
+      (setq csv_handle (open csv_path "w"))
+      (if csv_handle
+        (progn
+          (write-line "Circuit_Name,Type,DWG_File,BasePoint_X,BasePoint_Y,BasePoint_Z,InsertPoint_X,InsertPoint_Y,InsertPoint_Z,Date,Time" csv_handle)
+          (close csv_handle)))))
+  
+  ;; Append circuit data
+  (setq csv_handle (open csv_path "a"))
+  (if csv_handle
+    (progn
+      (setq date_str (menucmd "M=$(edtime,$(getvar,DATE),YYYY-MM-DD)"))
+      (setq time_str (menucmd "M=$(edtime,$(getvar,DATE),HH:MM:SS)"))
+      
+      (write-line 
+        (strcat 
+          circuit_name ","
+          circuit_type ","
+          dwg_file ","
+          (rtos (car base_pt) 2 4) ","
+          (rtos (cadr base_pt) 2 4) ","
+          (rtos (caddr base_pt) 2 4) ","
+          (if insert_pt (rtos (car insert_pt) 2 4) "") ","
+          (if insert_pt (rtos (cadr insert_pt) 2 4) "") ","
+          (if insert_pt (rtos (caddr insert_pt) 2 4) "") ","
+          date_str ","
+          time_str)
+        csv_handle)
+      (close csv_handle)
+      T)
+    nil))
+
+;; Read CSV and get circuit list with coordinates
+(defun cm:read_csv ( / csv_path csv_handle line circuit_list)
+  (setq csv_path (cm:get_csv_path))
+  (setq circuit_list '())
+  
+  (if (findfile csv_path)
+    (progn
+      (setq csv_handle (open csv_path "r"))
+      (if csv_handle
+        (progn
+          ;; Skip header
+          (read-line csv_handle)
+          
+          ;; Read all circuits
+          (while (setq line (read-line csv_handle))
+            (setq circuit_list (cons (cm:parse_csv_line line) circuit_list)))
+          
+          (close csv_handle)
+          (reverse circuit_list)))
+      circuit_list))
+)
+
+;; Parse CSV line into list
+(defun cm:parse_csv_line (line / parts)
+  (setq parts '())
+  (while (vl-string-search "," line)
+    (setq parts (cons (substr line 1 (vl-string-search "," line)) parts))
+    (setq line (substr line (+ (vl-string-search "," line) 2))))
+  (setq parts (cons line parts))
+  (reverse parts))
+
+;; Get coordinate from CSV for a circuit
+(defun cm:get_csv_coordinates (circuit_name / circuit_list circuit)
+  (setq circuit_list (cm:read_csv))
+  (foreach item circuit_list
+    (if (= (car item) circuit_name)
+      (setq circuit item)))
+  
+  (if circuit
+    (list
+      (atof (nth 4 circuit))  ; BasePoint_X
+      (atof (nth 5 circuit))  ; BasePoint_Y
+      (atof (nth 6 circuit))) ; BasePoint_Z
+    nil))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;; MAIN COMMAND - Show Circuit Manager Dialog
