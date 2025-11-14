@@ -19,8 +19,12 @@ cat > "$SCRIPT_PATH" << 'CRONSCRIPT'
 
 REPO_PATH="/workspaces/codespaces-blank"
 LOG_FILE="$REPO_PATH/auto_git_push.log"
+BRANCH="dev-macro"
 
 cd "$REPO_PATH" || exit 1
+
+# Ensure we're on dev-macro branch
+git checkout $BRANCH 2>/dev/null
 
 timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -33,8 +37,8 @@ if [[ -n $(git status -s) ]]; then
     commit_msg="Auto-commit: $(date '+%Y-%m-%d %H:%M:%S')"
     git commit -m "$commit_msg" >> "$LOG_FILE" 2>&1
     
-    if git push >> "$LOG_FILE" 2>&1; then
-        echo "[$timestamp] ✓ Successfully pushed" >> "$LOG_FILE"
+    if git push origin $BRANCH >> "$LOG_FILE" 2>&1; then
+        echo "[$timestamp] ✓ Successfully pushed to $BRANCH" >> "$LOG_FILE"
     else
         echo "[$timestamp] ✗ Push failed" >> "$LOG_FILE"
     fi

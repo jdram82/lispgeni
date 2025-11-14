@@ -8,12 +8,14 @@
 # Configuration
 INTERVAL=1200  # 20 minutes in seconds (20 * 60)
 REPO_PATH="/workspaces/codespaces-blank"
+BRANCH="dev-macro"  # Always work on dev-macro branch
 
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║   AUTO GIT PUSH SCHEDULER - Running every 20 minutes      ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Repository: $REPO_PATH"
+echo "Branch: $BRANCH"
 echo "Interval: 20 minutes ($INTERVAL seconds)"
 echo "Started at: $(date)"
 echo ""
@@ -22,6 +24,9 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 cd "$REPO_PATH" || exit 1
+
+# Ensure we're on the correct branch
+git checkout $BRANCH 2>/dev/null
 
 # Counter for tracking pushes
 push_count=0
@@ -41,9 +46,9 @@ while true; do
         commit_msg="Auto-commit: $(date '+%Y-%m-%d %H:%M:%S') - Push #$((++push_count))"
         git commit -m "$commit_msg"
         
-        # Push to remote
-        if git push; then
-            echo "[$timestamp] ✓ Successfully pushed to remote"
+        # Push to remote (dev-macro branch)
+        if git push origin $BRANCH; then
+            echo "[$timestamp] ✓ Successfully pushed to remote ($BRANCH)"
             echo "             Commit: $commit_msg"
         else
             echo "[$timestamp] ✗ Push failed - will retry next cycle"
