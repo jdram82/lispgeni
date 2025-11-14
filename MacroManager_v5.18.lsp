@@ -834,8 +834,11 @@ Push to the repository;; ══════════════════�
                (if (findfile dwg_path)
                  (vl-file-delete dwg_path))
                
-               ;; Execute WBLOCK using basic command function (proven to work)
-               (command "._-WBLOCK" dwg_path "=" block_name)
+               ;; Execute WBLOCK - separate command calls to handle paths with spaces
+               (command "._-WBLOCK")
+               (command dwg_path)
+               (command "=")
+               (command block_name)
                
                ;; Wait for completion
                (while (> (getvar "CMDACTIVE") 0)
@@ -894,8 +897,11 @@ Push to the repository;; ══════════════════�
                (if (findfile dwg_path)
                  (vl-file-delete dwg_path))
                
-               ;; Execute WBLOCK with timeout protection
-               (vl-cmdf "._-WBLOCK" dwg_path "=" block_name)
+               ;; Execute WBLOCK with timeout protection - separate calls for paths with spaces
+               (vl-cmdf "._-WBLOCK")
+               (vl-cmdf dwg_path)
+               (vl-cmdf "=")
+               (vl-cmdf block_name)
                
                ;; Wait with 30-second timeout (prevents infinite hangs)
                (setq timeout 0)
@@ -967,7 +973,10 @@ Push to the repository;; ══════════════════�
              (if (findfile dwg_path)
                (vl-file-delete dwg_path))
              
-             (vl-cmdf "._-WBLOCK" dwg_path "=" block_name)
+             (vl-cmdf "._-WBLOCK")
+             (vl-cmdf dwg_path)
+             (vl-cmdf "=")
+             (vl-cmdf block_name)
              (while (> (getvar "CMDACTIVE") 0)
                (vl-cmdf ""))
              
@@ -1050,7 +1059,10 @@ Push to the repository;; ══════════════════�
              (if (findfile dwg_path)
                (vl-file-delete dwg_path))
              
-             (command "._-WBLOCK" dwg_path "=" block_name)
+             (command "._-WBLOCK")
+             (command dwg_path)
+             (command "=")
+             (command block_name)
              (while (> (getvar "CMDACTIVE") 0)
                (command ""))
              

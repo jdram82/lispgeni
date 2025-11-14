@@ -106,11 +106,15 @@
               ;; Method 1: COMMAND
               ((= method_choice "1")
                (princ "\n    Method: COMMAND")
-               (princ (strcat "\n    Executing: (command \"._-WBLOCK\" \"" export_path "\" \"=\" \"" blk "\")"))
+               (princ (strcat "\n    Executing WBLOCK..."))
                (setq result
                  (vl-catch-all-apply
                    (function (lambda ()
-                     (command "._-WBLOCK" export_path "=" blk)
+                     ;; Use pause to avoid path issues with spaces
+                     (command "._-WBLOCK")
+                     (command export_path)
+                     (command "=")
+                     (command blk)
                      (princ "\n    Waiting...")
                      (while (> (getvar "CMDACTIVE") 0)
                        (command ""))
@@ -122,7 +126,10 @@
                (setq result
                  (vl-catch-all-apply
                    (function (lambda ()
-                     (vl-cmdf "._-WBLOCK" export_path "=" blk)
+                     (vl-cmdf "._-WBLOCK")
+                     (vl-cmdf export_path)
+                     (vl-cmdf "=")
+                     (vl-cmdf blk)
                      (while (> (getvar "CMDACTIVE") 0)
                        (vl-cmdf ""))
                      T)))))
@@ -228,7 +235,10 @@
       (setq result
         (vl-catch-all-apply
           (function (lambda ()
-            (command "._-WBLOCK" export_path "=" blk_name)
+            (command "._-WBLOCK")
+            (command export_path)
+            (command "=")
+            (command blk_name)
             (while (> (getvar "CMDACTIVE") 0)
               (command ""))
             T))))
