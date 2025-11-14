@@ -762,16 +762,16 @@
         (princ "\n      ⚠ Cannot export layout block - SKIP")
         nil)
        
-       ;; Additional safety: Check if block name contains invalid characters
+       ;; Additional safety: Check if block name contains invalid Windows filename characters
+       ;; NOTE: Spaces are ALLOWED in block names (e.g., "LM105 Analog IC")
        ((or (wcmatch block_name "*|*") 
             (wcmatch block_name "*<*") 
             (wcmatch block_name "*>*")
             (wcmatch block_name "*/*")
-            (wcmatch block_name "*\\*")
+            (wcmatch block_name "*\\\\*")  ; Double backslash for literal match
             (wcmatch block_name "*:*")
             (wcmatch block_name "*\"*")
-            (wcmatch block_name "*?*")
-            (wcmatch block_name "***"))
+            (wcmatch block_name "*?*"))
         (princ "\n      ⚠ Block name contains invalid file characters - SKIP")
         nil)
        
