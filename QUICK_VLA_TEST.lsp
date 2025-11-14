@@ -19,9 +19,17 @@
     (progn
       (princ (strcat "\n✓ Block '" blk "' found"))
       
-      ;; Set export path
-      (setq export_path (strcat "C:\\Temp\\testing_Export\\" blk ".dwg"))
+      ;; Set export path - using the same path as your test folder
+      (setq export_path (strcat "C:\\Temp\\testing_Export\\Test_Import_Export_DWG_5.17\\" blk ".dwg"))
       (princ (strcat "\n✓ Export path: " export_path))
+      
+      ;; Create directory if it doesn't exist
+      (if (not (findfile "C:\\Temp\\testing_Export\\Test_Import_Export_DWG_5.17\\"))
+        (progn
+          (princ "\n  Creating export directory...")
+          (vl-mkdir "C:\\Temp")
+          (vl-mkdir "C:\\Temp\\testing_Export")
+          (vl-mkdir "C:\\Temp\\testing_Export\\Test_Import_Export_DWG_5.17")))
       
       ;; Delete existing file
       (if (findfile export_path)
@@ -29,14 +37,26 @@
           (princ "\n  Deleting existing file...")
           (vl-file-delete export_path)))
       
-      ;; Try VLA-WBLOCK
-      (princ "\n\n→ Executing VLA-WBLOCK...")
+      ;; Cancel any active command first
+      (command)
+      (command)
+      
+      ;; Try COMMAND method with single call (this works better with VLA for block names with spaces)
+      (princ "\n\n→ Executing WBLOCK with single command call...")
       (setq result
         (vl-catch-all-apply
           (function (lambda ()
-            (setq acad (vlax-get-acad-object))
-            (setq doc (vla-get-activedocument acad))
-            (vla-wblock doc export_path blk)
+            ;; Set system variables
+            (setvar "CMDECHO" 0)
+            (setvar "FILEDIA" 0)
+            (setvar "EXPERT" 5)
+            
+            ;; Single command call - let AutoCAD handle the parsing
+            (command "._-WBLOCK" export_path "=" blk)
+            
+            (princ "\n  Waiting for completion...")
+            (while (> (getvar "CMDACTIVE") 0)
+              (command ""))
             T))))
       
       ;; Check result
