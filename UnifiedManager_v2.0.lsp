@@ -437,19 +437,30 @@
 ;; DIALOG MANAGEMENT
 ;; ═══════════════════════════════════════════════════════════════════════════
 
-(defun ucb:show_dialog ( / dcl_id result)
-  (setq dcl_id (load_dialog "UnifiedManager_v2.0.dcl"))
+(defun ucb:get_dcl_path ( / lsp_path)
+  (setq lsp_path (findfile "UnifiedManager_v2.0.lsp"))
+  (if lsp_path
+    (strcat (vl-filename-directory lsp_path) "\\UnifiedManager_v2.0.dcl")
+    "UnifiedManager_v2.0.dcl"))
+
+(defun ucb:show_dialog ( / dcl_id dcl_path result)
+  (setq dcl_path (ucb:get_dcl_path))
+  (setq dcl_id (load_dialog dcl_path))
   
-  (if (not (new_dialog "unified_manager" dcl_id))
+  (if (not dcl_id)
     (progn
-      (princ "\n✗ Cannot load dialog")
-      (unload_dialog dcl_id)
+      (princ (strcat "\n✗ Cannot find DCL file: " dcl_path))
       nil)
-    (progn
-      (ucb:init_dialog)
-      (setq result (start_dialog))
-      (unload_dialog dcl_id)
-      result)))
+    (if (not (new_dialog "ucbmanager" dcl_id))
+      (progn
+        (princ "\n✗ Cannot load dialog 'ucbmanager'")
+        (unload_dialog dcl_id)
+        nil)
+      (progn
+        (ucb:init_dialog)
+        (setq result (start_dialog))
+        (unload_dialog dcl_id)
+        result))))
 
 (defun ucb:init_dialog ( / )
   ;; Set operation mode
