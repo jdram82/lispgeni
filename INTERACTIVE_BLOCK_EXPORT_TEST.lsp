@@ -110,11 +110,8 @@
                (setq result
                  (vl-catch-all-apply
                    (function (lambda ()
-                     ;; Use pause to avoid path issues with spaces
-                     (command "._-WBLOCK")
-                     (command export_path)
-                     (command "=")
-                     (command blk)
+                     ;; Use pause to avoid issues with spaces in paths/names
+                     (command "._-WBLOCK" export_path "=" blk)
                      (princ "\n    Waiting...")
                      (while (> (getvar "CMDACTIVE") 0)
                        (command ""))
@@ -126,10 +123,7 @@
                (setq result
                  (vl-catch-all-apply
                    (function (lambda ()
-                     (vl-cmdf "._-WBLOCK")
-                     (vl-cmdf export_path)
-                     (vl-cmdf "=")
-                     (vl-cmdf blk)
+                     (vl-cmdf "._-WBLOCK" export_path "=" blk)
                      (while (> (getvar "CMDACTIVE") 0)
                        (vl-cmdf ""))
                      T)))))
