@@ -1240,7 +1240,14 @@
        (princ "\n\n>>> [STEP 3/6] Opening Export Files...")
        (princ (strcat "\n>>> CSV: " csv_path))
        (princ (strcat "\n>>> Block Library: " block_library_path))
-       (princ (strcat "\n>>> Export Method: " *export_method*))
+       (princ (strcat "\n>>> Export Method: " 
+         (cond
+           ((= *export_method* 0) "0 - Platform-Optimized")
+           ((= *export_method* 1) "1 - Direct vl-cmdf")
+           ((= *export_method* 2) "2 - Script Method")
+           ((= *export_method* 3) "3 - ObjectDBX/VLA")
+           ((= *export_method* 4) "4 - Basic COMMAND")
+           (T (itoa *export_method*)))))
        (princ (strcat "\n>>> Block Type: " *block_type*))
        
        ;; Create script file for WBLOCK commands
