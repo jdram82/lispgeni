@@ -493,9 +493,6 @@
   (set_tile "insert_scale" "1.0")
   (set_tile "insert_rotation" "0.0")
   
-  ;; Refresh library list
-  (ucb:refresh_library_list)
-  
   ;; Setup callbacks
   (action_tile "op_export" "(setq *ucb_operation_mode* \"export\") (ucb:mode_changed)")
   (action_tile "op_import" "(setq *ucb_operation_mode* \"import\") (ucb:mode_changed)")
@@ -519,7 +516,8 @@
   (action_tile "cancel" "(done_dialog 0)")
   (action_tile "accept" "(done_dialog 1)")
   
-  (ucb:mode_changed))
+  (ucb:mode_changed)
+  (ucb:refresh_library_list))
 
 (defun ucb:mode_changed ( / )
   (if (= *ucb_operation_mode* "export")
