@@ -18,20 +18,23 @@ ucbmanager : dialog {
       // OPERATION MODE SELECTION
       // ===============================================================
       
-      : boxed_radio_row {
+      : boxed_row {
         label = "Operation Mode";
-        key = "operation_mode";
         fixed_width = true;
         
-        : radio_button {
-          key = "mode_export";
-          label = "Export";
-          value = "1";
-        }
-        
-        : radio_button {
-          key = "mode_import";
-          label = "Import";
+        : radio_row {
+          key = "operation_mode";
+          
+          : radio_button {
+            key = "mode_export";
+            label = "Export";
+            value = "1";
+          }
+          
+          : radio_button {
+            key = "mode_import";
+            label = "Import";
+          }
         }
       }
       
@@ -41,20 +44,23 @@ ucbmanager : dialog {
       // CONTENT TYPE SELECTION
       // ===============================================================
       
-      : boxed_radio_row {
+      : boxed_row {
         label = "Content Type";
-        key = "content_type";
         fixed_width = true;
         
-        : radio_button {
-          key = "type_blocks";
-          label = "Block Definitions";
-          value = "1";
-        }
-        
-        : radio_button {
-          key = "type_circuits";
-          label = "Circuit Assemblies";
+        : radio_row {
+          key = "content_type";
+          
+          : radio_button {
+            key = "type_blocks";
+            label = "Block Definitions";
+            value = "1";
+          }
+          
+          : radio_button {
+            key = "type_circuits";
+            label = "Circuit Assemblies";
+          }
         }
       }
       
