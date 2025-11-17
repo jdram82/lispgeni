@@ -21,6 +21,10 @@
 (if (not *ucb_library_folder*) 
   (setq *ucb_library_folder* "C:\\Temp\\Circuit_Library"))
 
+;; Store the path where this LSP was loaded from
+(if (not *ucb_lsp_path*)
+  (setq *ucb_lsp_path* (findfile "UnifiedManager_v2.1.lsp")))
+
 (if (not *ucb_operation_mode*) 
   (setq *ucb_operation_mode* "export"))  ; "export" or "import"
 
@@ -438,17 +442,26 @@
 ;; ═══════════════════════════════════════════════════════════════════════════
 
 (defun ucb:get_dcl_path ( / lsp_path dcl_path dwg_path)
-  ;; Method 1: Look for LSP file in AutoCAD search path
-  (setq lsp_path (findfile "UnifiedManager_v2.1.lsp"))
+  ;; Method 1: Use the stored LSP path from when file was loaded
+  (if *ucb_lsp_path*
+    (setq lsp_path *ucb_lsp_path*)
+    ;; Fallback: Try to find it again
+    (setq lsp_path (findfile "UnifiedManager_v2.1.lsp")))
+  
   (if lsp_path
     (setq dcl_path (strcat (vl-filename-directory lsp_path) "\\UnifiedManager_v2.1.dcl"))
     (progn
       ;; Method 2: Try current drawing directory
       (setq dwg_path (getvar "DWGPREFIX"))
-      (setq dcl_path (strcat dwg_path "UnifiedManager_v2.0.dcl"))
+      (setq dcl_path (strcat dwg_path "UnifiedManager_v2.1.dcl"))
+      
       (if (not (findfile dcl_path))
-        ;; Method 3: Just the filename (AutoCAD will search support paths)
-        (setq dcl_path "UnifiedManager_v2.1.dcl"))))
+        (progn
+          ;; Method 3: Try LOCALROOTPREFIX (user's local AutoCAD folder)
+          (setq dcl_path (strcat (getvar "LOCALROOTPREFIX") "UnifiedManager_v2.1.dcl"))
+          (if (not (findfile dcl_path))
+            ;; Method 4: Just the filename (AutoCAD will search support paths)
+            (setq dcl_path "UnifiedManager_v2.1.dcl"))))))
   dcl_path)
 
 (defun ucb:show_dialog ( / dcl_id dcl_path result)
