@@ -509,10 +509,14 @@
                 (ucb:do_complete_export)
                 (setq continue nil)))
             ((= result 20) (ucb:do_import))     ; Import selected
-            ((= result 21)                      ; Import from CSV
-              (progn
-                (ucb:do_import_csv)
-                (setq continue nil)))
+            ((= result 21)                      ; CSV button clicked
+              (if *ucb_csv_file*
+                ;; CSV already selected - import it
+                (progn
+                  (ucb:do_import_csv)
+                  (setq continue nil))
+                ;; No CSV selected - browse for it
+                (ucb:browse_csv)))
             (T (setq continue nil)))))))
   
   (princ))
@@ -590,7 +594,7 @@
   (action_tile "btn_complete_export" "(done_dialog 13)")
   
   (action_tile "btn_start_import" "(done_dialog 20)")
-  (action_tile "btn_load_csv" "(if *ucb_csv_file* (done_dialog 21) (ucb:browse_csv))")
+  (action_tile "btn_load_csv" "(done_dialog 21)")
   
   (action_tile "cancel" "(done_dialog 0)")
   (action_tile "accept" "(done_dialog 1)")
