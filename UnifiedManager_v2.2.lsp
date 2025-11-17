@@ -942,7 +942,7 @@
       
       (alert (strcat "Batch Import Complete!\n\nImported " (itoa count) " items from CSV"))
       (princ (strcat "\n✓ Batch import complete: " (itoa count) " items imported"))
-      (setq *ucb_csv_file* nil)))))
+      (setq *ucb_csv_file* nil))))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;; INITIALIZATION
