@@ -610,26 +610,41 @@
         (princ "\n✗ Invalid block name")))
     
     (progn
-      ;; Circuit export
-      (setq item_name (getstring "\nEnter circuit name: "))
-      (if item_name
+      ;; Circuit export with improved workflow
+      (princ "\n╔══════════════════════════════════════════════════════╗")
+      (princ "\n║         CIRCUIT ASSEMBLY EXPORT WORKFLOW             ║")
+      (princ "\n╠══════════════════════════════════════════════════════╣")
+      (princ "\n║  Step 1: Enter circuit name                          ║")
+      (princ "\n║  Step 2: Select base point (for coordinate origin)  ║")
+      (princ "\n║  Step 3: Select all circuit entities                ║")
+      (princ "\n╚══════════════════════════════════════════════════════╝")
+      
+      (setq item_name (getstring T "\n→ Enter circuit name (e.g., Motor_Control_Panel_01): "))
+      (if (and item_name (> (strlen item_name) 0))
         (progn
-          (setq base_pt (getpoint "\nSelect base point for circuit: "))
+          (princ "\n→ Select BASE POINT (this will be coordinate 0,0,0 in CSV)...")
+          (setq base_pt (getpoint "\n   Pick base point: "))
           (if base_pt
             (progn
               (setq export_path 
                 (strcat (ucb:create_category_folder *ucb_category*) 
                         "\\" item_name ".dwg"))
               
+              (princ "\n→ Now selecting entities...")
               (setq result (ucb:circuit_export item_name export_path base_pt))
               
               (if result
                 (progn
                   (ucb:save_to_csv item_name *ucb_category* export_path base_pt base_pt)
-                  (princ (strcat "\n✓ Exported circuit: " item_name)))
-                (princ (strcat "\n✗ Failed to export circuit: " item_name))))
-            (princ "\n✗ No base point selected")))
-        (princ "\n✗ No circuit name entered")))))
+                  (princ "\n╔══════════════════════════════════════════════════════╗")
+                  (princ (strcat "\n║ ✓ SUCCESS: " item_name))
+                  (princ (strcat "\n║   Saved to: " export_path))
+                  (princ (strcat "\n║   Category: " *ucb_category*))
+                  (princ "\n║   Coordinates saved to CSV for batch import")
+                  (princ "\n╚══════════════════════════════════════════════════════╝"))
+                (princ "\n✗ Failed to export circuit")))
+            (princ "\n✗ No base point selected - Export cancelled")))
+        (princ "\n✗ No circuit name entered - Export cancelled")))))
 
 (defun ucb:do_export_batch ( / block_list item export_path result success_count fail_count)
   (done_dialog 2)
