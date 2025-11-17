@@ -116,10 +116,38 @@ ucbmanager : dialog {
     
     : spacer { height = 0.5; }
     
-    : button {
-      key = "btn_start_export";
-      label = "START EXPORT";
-      width = 30;
+    : boxed_column {
+      label = "Step-by-Step Export";
+      
+      : button {
+        key = "btn_step1";
+        label = "Step 1: SELECT Entities";
+        width = 30;
+      }
+      
+      : button {
+        key = "btn_step2";
+        label = "Step 2: ENTER Name";
+        width = 30;
+      }
+      
+      : button {
+        key = "btn_step3";
+        label = "Step 3: PICK Base Point";
+        width = 30;
+      }
+      
+      : text {
+        key = "txt_export_status";
+        label = "Ready";
+        alignment = centered;
+      }
+      
+      : button {
+        key = "btn_complete_export";
+        label = "COMPLETE EXPORT";
+        width = 30;
+      }
     }
   }
   

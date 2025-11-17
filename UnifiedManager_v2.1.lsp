@@ -34,6 +34,11 @@
 (if (not *ucb_export_method*) 
   (setq *ucb_export_method* 0))          ; 0-4
 
+;; Step-by-step workflow variables
+(setq *ucb_step1_ss* nil)           ; Step 1: Selected entities
+(setq *ucb_step2_name* nil)         ; Step 2: Circuit/block name
+(setq *ucb_step3_basepoint* nil)    ; Step 3: Base point
+
 (if (not *ucb_import_method*) 
   (setq *ucb_import_method* 0))          ; 0-4
 
@@ -534,7 +539,11 @@
   (action_tile "btn_browse_folder" "(ucb:browse_folder)")
   (action_tile "btn_refresh_list" "(ucb:refresh_library_list)")
   
-  (action_tile "btn_start_export" "(ucb:do_export_single)")
+  ;; Step-by-step workflow buttons
+  (action_tile "btn_step1" "(ucb:do_step1)")
+  (action_tile "btn_step2" "(ucb:do_step2)")
+  (action_tile "btn_step3" "(ucb:do_step3)")
+  (action_tile "btn_complete_export" "(ucb:do_complete_export)(done_dialog 1)")
   
   (action_tile "btn_start_import" "(ucb:do_import)")
   (action_tile "btn_load_csv" "(ucb:do_import_csv)")
@@ -582,6 +591,100 @@
       (set_tile "library_folder" *ucb_library_folder*)
       (ucb:refresh_library_list))))
 
+
+;; ═══════════════════════════════════════════════════════════════════════════
+;; STEP-BY-STEP WORKFLOW FUNCTIONS
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun ucb:do_step1 (/ ss)
+  (princ "\n→ Step 1: SELECT entities...")
+  (setq ss (ssget))
+  (if ss
+    (progn
+      (setq *ucb_step1_ss* ss)
+      (princ (strcat "\n✓ Selected " (itoa (sslength ss)) " entities"))
+      (alert (strcat "Step 1 Complete!\n\nSelected: " (itoa (sslength ss)) " entities\n\nClick 'Step 2' to enter name.")))
+    (progn
+      (setq *ucb_step1_ss* nil)
+      (alert "No entities selected.\n\nPlease try Step 1 again.")))
+  (princ))
+
+(defun ucb:do_step2 (/ name)
+  (if *ucb_step1_ss*
+    (progn
+      (princ "\n→ Step 2: ENTER name...")
+      (setq name (getstring T "\nEnter circuit/block name: "))
+      (if (and name (> (strlen name) 0))
+        (progn
+          (setq *ucb_step2_name* name)
+          (princ (strcat "\n✓ Name: " name))
+          (alert (strcat "Step 2 Complete!\n\nName: " name "\n\nClick 'Step 3' to pick base point.")))
+        (progn
+          (setq *ucb_step2_name* nil)
+          (alert "No name entered.\n\nPlease try Step 2 again."))))
+    (alert "Please complete Step 1 first!\n\nClick 'Step 1: SELECT Entities'"))
+  (princ))
+
+(defun ucb:do_step3 (/ pt)
+  (if (and *ucb_step1_ss* *ucb_step2_name*)
+    (progn
+      (princ "\n→ Step 3: PICK base point...")
+      (setq pt (getpoint "\nPick base point (coordinate origin): "))
+      (if pt
+        (progn
+          (setq *ucb_step3_basepoint* pt)
+          (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2)))
+          (alert (strcat "Step 3 Complete!\n\nBase Point: " 
+                        (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2) 
+                        "\n\nClick 'COMPLETE EXPORT' to save.")))
+        (progn
+          (setq *ucb_step3_basepoint* nil)
+          (alert "No base point selected.\n\nPlease try Step 3 again."))))
+    (alert "Please complete Steps 1 and 2 first!\n\n1. Step 1: SELECT Entities\n2. Step 2: ENTER Name"))
+  (princ))
+
+(defun ucb:do_complete_export (/ export_path)
+  (if (and *ucb_step1_ss* *ucb_step2_name* *ucb_step3_basepoint*)
+    (progn
+      (princ "\n→ Completing export...")
+      (setq export_path 
+        (strcat (ucb:create_category_folder *ucb_category*) 
+                "\\" *ucb_step2_name* ".dwg"))
+      
+      (setvar "CMDECHO" 0)
+      (setvar "FILEDIA" 0)
+      (setvar "EXPERT" 5)
+      
+      (if (findfile export_path)
+        (vl-file-delete export_path))
+      
+      (command "._-WBLOCK" export_path "" *ucb_step3_basepoint* *ucb_step1_ss* "")
+      (while (> (getvar "CMDACTIVE") 0)
+        (command ""))
+      
+      (setvar "CMDECHO" 1)
+      (setvar "FILEDIA" 1)
+      (setvar "EXPERT" 0)
+      
+      (if (findfile export_path)
+        (progn
+          (ucb:save_to_csv *ucb_step2_name* *ucb_category* export_path 
+                          *ucb_step3_basepoint* *ucb_step3_basepoint*)
+          (alert (strcat "SUCCESS!\n\n"
+                        "Name: " *ucb_step2_name* "\n"
+                        "File: " export_path "\n"
+                        "Category: " *ucb_category* "\n"
+                        "Entities: " (itoa (sslength *ucb_step1_ss*)) "\n"
+                        "Base Point: " (rtos (car *ucb_step3_basepoint*) 2 2) "," 
+                                      (rtos (cadr *ucb_step3_basepoint*) 2 2) "\n\n"
+                        "Coordinates saved to CSV."))
+          ;; Clear step data
+          (setq *ucb_step1_ss* nil)
+          (setq *ucb_step2_name* nil)
+          (setq *ucb_step3_basepoint* nil))
+        (alert "Export failed - WBLOCK error.")))
+    (alert "Please complete all 3 steps first!\n\n1. Step 1: SELECT Entities\n2. Step 2: ENTER Name\n3. Step 3: PICK Base Point"))
+  (princ))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;; EXECUTION FUNCTIONS
@@ -671,7 +774,7 @@
                     (princ "\n✗ Failed to export circuit - WBLOCK error")))
                 (princ "\n✗ No base point selected - Export cancelled")))
             (princ "\n✗ No circuit name entered - Export cancelled")))
-        (princ "\n✗ No entities selected - Export cancelled")))))
+        (princ "\n✗ No entities selected - Export cancelled"))))))
 
 (defun ucb:do_export_batch ( / block_list item export_path result success_count fail_count)
   (done_dialog 2)
