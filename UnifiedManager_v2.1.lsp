@@ -36,6 +36,7 @@
 
 ;; Step-by-step workflow variables
 (setq *ucb_step1_ss* nil)           ; Step 1: Selected entities
+(setq *ucb_selection_count* nil)    ; Count of selected entities
 (setq *ucb_step2_name* nil)         ; Step 2: Circuit/block name
 (setq *ucb_step3_basepoint* nil)    ; Step 3: Base point
 
@@ -494,9 +495,8 @@
           (cond
             ((= result 0) (setq continue nil))  ; Cancel
             ((= result 1) (setq continue nil))  ; Close/OK
-            ((= result 10) (ucb:do_step1))      ; Step 1
-            ((= result 11) (ucb:do_step2))      ; Step 2
-            ((= result 12) (ucb:do_step3))      ; Step 3
+            ((= result 10) (ucb:do_step1))      ; Step 1: Select
+            ((= result 12) (ucb:do_step3))      ; Step 3: Base Point
             ((= result 13)                      ; Complete Export
               (progn
                 (ucb:do_complete_export)
@@ -553,9 +553,22 @@
   (action_tile "btn_browse_folder" "(ucb:browse_folder)")
   (action_tile "btn_refresh_list" "(ucb:refresh_library_list)")
   
+  ;; Export name field
+  (action_tile "export_name" "(setq *ucb_step2_name* $value)")
+  
+  ;; Update selection count display
+  (if *ucb_selection_count*
+    (set_tile "txt_selection_count" 
+      (strcat "✓ Selected " *ucb_selection_count* " entities"))
+    (set_tile "txt_selection_count" "No entities selected"))
+  
+  ;; Set export name if exists
+  (if *ucb_step2_name*
+    (set_tile "export_name" *ucb_step2_name*)
+    (set_tile "export_name" ""))
+  
   ;; Step-by-step workflow buttons
   (action_tile "btn_step1" "(done_dialog 10)")
-  (action_tile "btn_step2" "(done_dialog 11)")
   (action_tile "btn_step3" "(done_dialog 12)")
   (action_tile "btn_complete_export" "(done_dialog 13)")
   
@@ -616,46 +629,33 @@
   (if ss
     (progn
       (setq *ucb_step1_ss* ss)
-      (princ (strcat "\n✓ Selected " (itoa (sslength ss)) " entities"))
-      (alert (strcat "Step 1 Complete!\n\nSelected: " (itoa (sslength ss)) " entities\n\nClick 'Step 2' to enter name.")))
+      (setq *ucb_selection_count* (itoa (sslength ss)))
+      (princ (strcat "\n✓ Selected " *ucb_selection_count* " entities")))
     (progn
       (setq *ucb_step1_ss* nil)
-      (alert "No entities selected.\n\nPlease try Step 1 again.")))
+      (setq *ucb_selection_count* "0")))
   (princ))
 
-(defun ucb:do_step2 (/ name)
-  (if *ucb_step1_ss*
-    (progn
-      (princ "\n→ Step 2: ENTER name...")
-      (setq name (getstring T "\nEnter circuit/block name: "))
-      (if (and name (> (strlen name) 0))
-        (progn
-          (setq *ucb_step2_name* name)
-          (princ (strcat "\n✓ Name: " name))
-          (alert (strcat "Step 2 Complete!\n\nName: " name "\n\nClick 'Step 3' to pick base point.")))
-        (progn
-          (setq *ucb_step2_name* nil)
-          (alert "No name entered.\n\nPlease try Step 2 again."))))
-    (alert "Please complete Step 1 first!\n\nClick 'Step 1: SELECT Entities'"))
-  (princ))
+;; Step 2 is now handled by dialog input field - no separate function needed
 
 (defun ucb:do_step3 (/ pt)
-  (if (and *ucb_step1_ss* *ucb_step2_name*)
+  (if (not *ucb_step1_ss*)
     (progn
-      (princ "\n→ Step 3: PICK base point...")
-      (setq pt (getpoint "\nPick base point (coordinate origin): "))
-      (if pt
-        (progn
-          (setq *ucb_step3_basepoint* pt)
-          (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2)))
-          (alert (strcat "Step 3 Complete!\n\nBase Point: " 
-                        (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2) 
-                        "\n\nClick 'COMPLETE EXPORT' to save.")))
-        (progn
-          (setq *ucb_step3_basepoint* nil)
-          (alert "No base point selected.\n\nPlease try Step 3 again."))))
-    (alert "Please complete Steps 1 and 2 first!\n\n1. Step 1: SELECT Entities\n2. Step 2: ENTER Name"))
-  (princ))
+      (alert "Please SELECT entities first!\n\nClick '① SELECT Entities' button.")
+      (princ))
+    (if (not (and *ucb_step2_name* (> (strlen *ucb_step2_name*) 0)))
+      (progn
+        (alert "Please enter a NAME first!\n\nType in the '② Name' field.")
+        (princ))
+      (progn
+        (princ "\n→ Step 3: PICK base point...")
+        (setq pt (getpoint "\nPick base point (coordinate origin): "))
+        (if pt
+          (progn
+            (setq *ucb_step3_basepoint* pt)
+            (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2))))
+          (setq *ucb_step3_basepoint* nil))
+        (princ)))))
 
 (defun ucb:do_complete_export (/ export_path)
   (if (and *ucb_step1_ss* *ucb_step2_name* *ucb_step3_basepoint*)
@@ -694,10 +694,11 @@
                         "Coordinates saved to CSV."))
           ;; Clear step data
           (setq *ucb_step1_ss* nil)
+          (setq *ucb_selection_count* nil)
           (setq *ucb_step2_name* nil)
           (setq *ucb_step3_basepoint* nil))
         (alert "Export failed - WBLOCK error.")))
-    (alert "Please complete all 3 steps first!\n\n1. Step 1: SELECT Entities\n2. Step 2: ENTER Name\n3. Step 3: PICK Base Point"))
+    (alert "Please complete all 3 steps!\n\n① SELECT Entities\n② Enter NAME in field\n③ PICK Base Point"))
   (princ))
 
 ;; ═══════════════════════════════════════════════════════════════════════════

@@ -100,25 +100,38 @@ ucbmanager : dialog {
     : boxed_column {
       label = "› Quick Export Steps";
       
+      : button {
+        key = "btn_step1";
+        label = "① SELECT Entities";
+        width = 42;
+      }
+      
+      : text {
+        key = "txt_selection_count";
+        label = "No entities selected";
+        alignment = centered;
+      }
+      
+      : spacer { height = 0.2; }
+      
       : row {
-        : button {
-          key = "btn_step1";
-          label = "① Select";
-          width = 13;
-          fixed_width = true;
+        : text {
+          label = "② Name:";
+          width = 8;
         }
-        : button {
-          key = "btn_step2";
-          label = "② Name";
-          width = 13;
-          fixed_width = true;
+        : edit_box {
+          key = "export_name";
+          width = 32;
+          edit_width = 30;
         }
-        : button {
-          key = "btn_step3";
-          label = "③ Base Point";
-          width = 13;
-          fixed_width = true;
-        }
+      }
+      
+      : spacer { height = 0.2; }
+      
+      : button {
+        key = "btn_step3";
+        label = "③ PICK Base Point";
+        width = 42;
       }
       
       : text {
