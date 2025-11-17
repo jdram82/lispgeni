@@ -482,6 +482,9 @@
   (set_tile "type_blocks" (if (= *ucb_content_type* "blocks") "1" "0"))
   (set_tile "type_circuits" (if (= *ucb_content_type* "circuits") "1" "0"))
   
+  ;; Set library folder
+  (set_tile "library_folder" *ucb_library_folder*)
+  
   ;; Initialize export panel
   (set_tile "export_single" "1")
   (start_list "export_method")
@@ -510,6 +513,7 @@
   (action_tile "type_blocks" "(setq *ucb_content_type* \"blocks\") (ucb:type_changed)")
   (action_tile "type_circuits" "(setq *ucb_content_type* \"circuits\") (ucb:type_changed)")
   
+  (action_tile "library_folder" "(setq *ucb_library_folder* $value)")
   (action_tile "export_method" "(setq *ucb_export_method* (atoi $value))")
   (action_tile "import_method" "(setq *ucb_import_method* (atoi $value))")
   (action_tile "export_category" "(setq *ucb_category* (nth (atoi $value) *ucb_categories*))")
@@ -555,10 +559,13 @@
     (strcat "Found " (itoa (length file_list)) " " *ucb_content_type* " in library")))
 
 (defun ucb:browse_folder ( / folder)
-  (setq folder (getfiled "Select Library Folder" *ucb_library_folder* "" 1))
+  (setq folder (getfiled "Select Library Folder" *ucb_library_folder* "" 16))
   (if folder
     (progn
-      (setq *ucb_library_folder* (vl-filename-directory folder))
+      ;; If user selected a file, get its directory; if directory, use as-is
+      (if (wcmatch folder "*.*")
+        (setq *ucb_library_folder* (vl-filename-directory folder))
+        (setq *ucb_library_folder* folder))
       (set_tile "library_folder" *ucb_library_folder*)
       (ucb:refresh_library_list))))
 
