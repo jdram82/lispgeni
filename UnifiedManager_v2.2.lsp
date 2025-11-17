@@ -44,6 +44,8 @@
 (setq *ucb_import_scale* 1.0)       ; Import scale factor
 (setq *ucb_import_rotation* 0.0)    ; Import rotation angle
 (setq *ucb_import_selection* nil)   ; Selected item from list
+(setq *ucb_csv_file* nil)           ; Selected CSV file for import
+(setq *ucb_csv_file* nil)           ; Selected CSV file for import
 
 (if (not *ucb_import_method*) 
   (setq *ucb_import_method* 0))          ; 0-4
@@ -588,7 +590,7 @@
   (action_tile "btn_complete_export" "(done_dialog 13)")
   
   (action_tile "btn_start_import" "(done_dialog 20)")
-  (action_tile "btn_load_csv" "(done_dialog 21)")
+  (action_tile "btn_load_csv" "(if *ucb_csv_file* (done_dialog 21) (ucb:browse_csv))")
   
   (action_tile "cancel" "(done_dialog 0)")
   (action_tile "accept" "(done_dialog 1)")
@@ -632,6 +634,23 @@
         (setq *ucb_library_folder* folder))
       (set_tile "library_folder" *ucb_library_folder*)
       (ucb:refresh_library_list))))
+
+(defun ucb:browse_csv ( / csv_file csv_dir)
+  ;; Try to get CSV from library folder first
+  (setq csv_dir *ucb_library_folder*)
+  (if (not csv_dir)
+    (setq csv_dir (getvar "DWGPREFIX")))
+  
+  (setq csv_file (getfiled 
+    (strcat "Select " 
+      (if (= *ucb_content_type* "blocks") "Block" "Circuit") 
+      " Coordinates CSV File") 
+    csv_dir "csv" 4))
+  
+  (if csv_file
+    (progn
+      (setq *ucb_csv_file* csv_file)
+      (alert (strcat "CSV file selected:\n" csv_file "\n\nClick '📄 CSV' again to import.")))))
 
 
 ;; ═══════════════════════════════════════════════════════════════════════════
@@ -871,10 +890,15 @@
     (princ "\n✗ No item selected")))
 
 (defun ucb:do_import_csv ( / csv_path csv_data item_name item_path insert_pt scale rotation count)
-  (setq csv_path (ucb:get_csv_path *ucb_content_type*))
+  ;; Use selected CSV file or default
+  (if *ucb_csv_file*
+    (setq csv_path *ucb_csv_file*)
+    (setq csv_path (ucb:get_csv_path *ucb_content_type*)))
   
   (if (not (findfile csv_path))
-    (princ (strcat "\n✗ CSV file not found: " csv_path))
+    (progn
+      (alert (strcat "CSV file not found!\n\nPath: " csv_path "\n\nClick '📄 CSV' to browse for file."))
+      (princ (strcat "\n✗ CSV file not found: " csv_path)))
     
     (progn
       (setq csv_data (ucb:read_csv csv_path))
@@ -916,7 +940,9 @@
               
               (princ (strcat "\n  ✗ Cannot import: " item_name))))))
       
-      (princ (strcat "\n✓ Batch import complete: " (itoa count) " items imported")))))
+      (alert (strcat "Batch Import Complete!\n\nImported " (itoa count) " items from CSV"))
+      (princ (strcat "\n✓ Batch import complete: " (itoa count) " items imported"))
+      (setq *ucb_csv_file* nil)))))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;; INITIALIZATION
