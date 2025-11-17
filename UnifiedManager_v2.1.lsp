@@ -774,7 +774,7 @@
                     (princ "\n✗ Failed to export circuit - WBLOCK error")))
                 (princ "\n✗ No base point selected - Export cancelled")))
             (princ "\n✗ No circuit name entered - Export cancelled")))
-        (princ "\n✗ No entities selected - Export cancelled"))))))
+        (princ "\n✗ No entities selected - Export cancelled")))))
 
 (defun ucb:do_export_batch ( / block_list item export_path result success_count fail_count)
   (done_dialog 2)
