@@ -508,11 +508,15 @@
               (progn
                 (ucb:do_complete_export)
                 (setq continue nil)))
-            ((= result 20) (ucb:do_import))     ; Import selected
-            ((= result 21)                      ; CSV button - browse and import
-              (progn
-                (ucb:browse_and_import_csv)
-                (setq continue nil)))
+            ((= result 20)                      ; Import button
+              (if *ucb_csv_file*
+                ;; CSV file selected - do batch import
+                (progn
+                  (ucb:do_import_csv)
+                  (setq continue nil))
+                ;; No CSV - do regular import from list
+                (ucb:do_import)))
+            ((= result 21) (ucb:browse_csv))    ; CSV button - just browse
             (T (setq continue nil)))))))
   
   (princ))
@@ -635,7 +639,7 @@
       (set_tile "library_folder" *ucb_library_folder*)
       (ucb:refresh_library_list))))
 
-(defun ucb:browse_and_import_csv ( / csv_file csv_dir csv_data entry_count response)
+(defun ucb:browse_csv ( / csv_file csv_dir csv_data entry_count)
   ;; Try to get CSV from library folder first
   (setq csv_dir *ucb_library_folder*)
   (if (not csv_dir)
@@ -650,24 +654,17 @@
   (if csv_file
     (progn
       (setq *ucb_csv_file* csv_file)
-      (princ (strcat "\n→ CSV file selected: " csv_file))
+      (princ (strcat "\n✓ CSV file selected: " csv_file))
       
       ;; Read CSV to count entries
       (if (setq csv_data (ucb:read_csv csv_file))
         (progn
           (setq entry_count (1- (length csv_data)))  ; Subtract header
-          
-          ;; Show confirmation with count
-          (initget "Yes No")
-          (setq response 
-            (getkword 
-              (strcat "\nFound " (itoa entry_count) 
-                      " " (if (= *ucb_content_type* "blocks") "blocks" "circuits")
-                      " in CSV.\nImport all now? [Yes/No] <Yes>: ")))
-          
-          (if (or (not response) (= response "Yes"))
-            (ucb:do_import_csv)
-            (princ "\n✗ Import cancelled")))
+          (alert (strcat "CSV File Selected!\n\n"
+                        "File: " csv_file "\n"
+                        "Found: " (itoa entry_count) " "
+                        (if (= *ucb_content_type* "blocks") "blocks" "circuits")
+                        "\n\nClick '▶ IMPORT' button to import all.")))
         (alert (strcat "Cannot read CSV file:\n" csv_file))))))
 
 
