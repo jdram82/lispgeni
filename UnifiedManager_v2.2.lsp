@@ -509,14 +509,10 @@
                 (ucb:do_complete_export)
                 (setq continue nil)))
             ((= result 20) (ucb:do_import))     ; Import selected
-            ((= result 21)                      ; CSV button clicked
-              (if *ucb_csv_file*
-                ;; CSV already selected - import it
-                (progn
-                  (ucb:do_import_csv)
-                  (setq continue nil))
-                ;; No CSV selected - browse for it
-                (ucb:browse_csv)))
+            ((= result 21)                      ; CSV button - browse and import
+              (progn
+                (ucb:browse_and_import_csv)
+                (setq continue nil)))
             (T (setq continue nil)))))))
   
   (princ))
@@ -639,7 +635,7 @@
       (set_tile "library_folder" *ucb_library_folder*)
       (ucb:refresh_library_list))))
 
-(defun ucb:browse_csv ( / csv_file csv_dir)
+(defun ucb:browse_and_import_csv ( / csv_file csv_dir)
   ;; Try to get CSV from library folder first
   (setq csv_dir *ucb_library_folder*)
   (if (not csv_dir)
@@ -654,7 +650,9 @@
   (if csv_file
     (progn
       (setq *ucb_csv_file* csv_file)
-      (alert (strcat "CSV file selected:\n" csv_file "\n\nClick '📄 CSV' again to import.")))))
+      (princ (strcat "\n→ CSV file selected: " csv_file))
+      ;; Import immediately
+      (ucb:do_import_csv))))
 
 
 ;; ═══════════════════════════════════════════════════════════════════════════
