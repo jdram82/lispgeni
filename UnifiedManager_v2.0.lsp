@@ -437,19 +437,30 @@
 ;; DIALOG MANAGEMENT
 ;; ═══════════════════════════════════════════════════════════════════════════
 
-(defun ucb:get_dcl_path ( / lsp_path)
+(defun ucb:get_dcl_path ( / lsp_path dcl_path dwg_path)
+  ;; Method 1: Look for LSP file in AutoCAD search path
   (setq lsp_path (findfile "UnifiedManager_v2.0.lsp"))
   (if lsp_path
-    (strcat (vl-filename-directory lsp_path) "\\UnifiedManager_v2.0.dcl")
-    "UnifiedManager_v2.0.dcl"))
+    (setq dcl_path (strcat (vl-filename-directory lsp_path) "\\UnifiedManager_v2.0.dcl"))
+    (progn
+      ;; Method 2: Try current drawing directory
+      (setq dwg_path (getvar "DWGPREFIX"))
+      (setq dcl_path (strcat dwg_path "UnifiedManager_v2.0.dcl"))
+      (if (not (findfile dcl_path))
+        ;; Method 3: Just the filename (AutoCAD will search support paths)
+        (setq dcl_path "UnifiedManager_v2.0.dcl"))))
+  dcl_path)
 
 (defun ucb:show_dialog ( / dcl_id dcl_path result)
   (setq dcl_path (ucb:get_dcl_path))
+  (princ (strcat "\n→ Looking for DCL: " dcl_path))
+  (princ (strcat "\n→ DCL exists: " (if (findfile dcl_path) "YES" "NO")))
   (setq dcl_id (load_dialog dcl_path))
   
   (if (not dcl_id)
     (progn
       (princ (strcat "\n✗ Cannot find DCL file: " dcl_path))
+      (princ "\n✗ load_dialog returned nil")
       nil)
     (if (not (new_dialog "ucbmanager" dcl_id))
       (progn
