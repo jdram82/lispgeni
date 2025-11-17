@@ -469,27 +469,41 @@
             (setq dcl_path "UnifiedManager_v2.1.dcl"))))))
   dcl_path)
 
-(defun ucb:show_dialog ( / dcl_id dcl_path result)
-  (setq dcl_path (ucb:get_dcl_path))
-  (princ (strcat "\n→ Looking for DCL: " dcl_path))
-  (princ (strcat "\n→ DCL exists: " (if (findfile dcl_path) "YES" "NO")))
-  (setq dcl_id (load_dialog dcl_path))
+(defun ucb:show_dialog ( / dcl_id dcl_path result continue)
+  (setq continue T)
   
-  (if (not dcl_id)
-    (progn
-      (princ (strcat "\n✗ Cannot find DCL file: " dcl_path))
-      (princ "\n✗ load_dialog returned nil")
-      nil)
-    (if (not (new_dialog "ucbmanager" dcl_id))
+  (while continue
+    (setq dcl_path (ucb:get_dcl_path))
+    (setq dcl_id (load_dialog dcl_path))
+    
+    (if (not dcl_id)
       (progn
-        (princ "\n✗ Cannot load dialog 'ucbmanager'")
-        (unload_dialog dcl_id)
-        nil)
-      (progn
-        (ucb:init_dialog)
-        (setq result (start_dialog))
-        (unload_dialog dcl_id)
-        result))))
+        (princ (strcat "\n✗ Cannot find DCL file: " dcl_path))
+        (setq continue nil))
+      (if (not (new_dialog "ucbmanager" dcl_id))
+        (progn
+          (princ "\n✗ Cannot load dialog 'ucbmanager'")
+          (unload_dialog dcl_id)
+          (setq continue nil))
+        (progn
+          (ucb:init_dialog)
+          (setq result (start_dialog))
+          (unload_dialog dcl_id)
+          
+          ;; Handle dialog results
+          (cond
+            ((= result 0) (setq continue nil))  ; Cancel
+            ((= result 1) (setq continue nil))  ; Close/OK
+            ((= result 10) (ucb:do_step1))      ; Step 1
+            ((= result 11) (ucb:do_step2))      ; Step 2
+            ((= result 12) (ucb:do_step3))      ; Step 3
+            ((= result 13)                      ; Complete Export
+              (progn
+                (ucb:do_complete_export)
+                (setq continue nil)))
+            (T (setq continue nil)))))))
+  
+  (princ))
 
 (defun ucb:init_dialog ( / )
   ;; Set operation mode
@@ -540,10 +554,10 @@
   (action_tile "btn_refresh_list" "(ucb:refresh_library_list)")
   
   ;; Step-by-step workflow buttons
-  (action_tile "btn_step1" "(ucb:do_step1)")
-  (action_tile "btn_step2" "(ucb:do_step2)")
-  (action_tile "btn_step3" "(ucb:do_step3)")
-  (action_tile "btn_complete_export" "(ucb:do_complete_export)(done_dialog 1)")
+  (action_tile "btn_step1" "(done_dialog 10)")
+  (action_tile "btn_step2" "(done_dialog 11)")
+  (action_tile "btn_step3" "(done_dialog 12)")
+  (action_tile "btn_complete_export" "(done_dialog 13)")
   
   (action_tile "btn_start_import" "(ucb:do_import)")
   (action_tile "btn_load_csv" "(ucb:do_import_csv)")
