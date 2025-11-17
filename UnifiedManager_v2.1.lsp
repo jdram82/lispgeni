@@ -40,6 +40,11 @@
 (setq *ucb_step2_name* nil)         ; Step 2: Circuit/block name
 (setq *ucb_step3_basepoint* nil)    ; Step 3: Base point
 
+;; Import workflow variables
+(setq *ucb_import_scale* 1.0)       ; Import scale factor
+(setq *ucb_import_rotation* 0.0)    ; Import rotation angle
+(setq *ucb_import_selection* nil)   ; Selected item from list
+
 (if (not *ucb_import_method*) 
   (setq *ucb_import_method* 0))          ; 0-4
 
@@ -501,6 +506,11 @@
               (progn
                 (ucb:do_complete_export)
                 (setq continue nil)))
+            ((= result 20) (ucb:do_import))     ; Import selected
+            ((= result 21)                      ; Import from CSV
+              (progn
+                (ucb:do_import_csv)
+                (setq continue nil)))
             (T (setq continue nil)))))))
   
   (princ))
@@ -556,6 +566,11 @@
   ;; Export name field
   (action_tile "export_name" "(setq *ucb_step2_name* $value)")
   
+  ;; Import fields - store values
+  (action_tile "import_scale" "(setq *ucb_import_scale* (atof $value))")
+  (action_tile "import_rotation" "(setq *ucb_import_rotation* (atof $value))")
+  (action_tile "import_list" "(setq *ucb_import_selection* $value)")
+  
   ;; Update selection count display
   (if *ucb_selection_count*
     (set_tile "txt_selection_count" 
@@ -572,8 +587,8 @@
   (action_tile "btn_step3" "(done_dialog 12)")
   (action_tile "btn_complete_export" "(done_dialog 13)")
   
-  (action_tile "btn_start_import" "(ucb:do_import)")
-  (action_tile "btn_load_csv" "(ucb:do_import_csv)")
+  (action_tile "btn_start_import" "(done_dialog 20)")
+  (action_tile "btn_load_csv" "(done_dialog 21)")
   
   (action_tile "cancel" "(done_dialog 0)")
   (action_tile "accept" "(done_dialog 1)")
@@ -829,37 +844,33 @@
   (princ (strcat "\n  Exporting all " *ucb_content_type* " to category: " *ucb_category*))
   (ucb:do_export_batch))
 
-(defun ucb:do_import ( / selected_items file_list item_data item_path insert_pt scale rotation)
-  (done_dialog 2)
-  
-  (setq selected_items (get_tile "import_list"))
+(defun ucb:do_import ( / file_list item_data item_path insert_pt)
   (setq file_list (ucb:get_library_files *ucb_content_type*))
   
-  (if (and selected_items file_list)
+  (if (and *ucb_import_selection* file_list)
     (progn
-      (setq item_data (nth (atoi selected_items) file_list))
+      (setq item_data (nth (atoi *ucb_import_selection*) file_list))
       (setq item_path (caddr item_data))
-      
-      (setq scale (atof (get_tile "import_scale")))
-      (setq rotation (atof (get_tile "import_rotation")))
       
       (if (= *ucb_content_type* "blocks")
         (progn
           (princ (strcat "\n→ Importing block: " (car item_data)))
-          (ucb:block_import item_path *ucb_import_method*))
+          (ucb:block_import item_path *ucb_import_method*)
+          (alert (strcat "Block imported: " (car item_data))))
         
         (progn
-          (setq insert_pt (getpoint "\nSelect insertion point: "))
+          (princ (strcat "\n→ Select insertion point for: " (car item_data)))
+          (setq insert_pt (getpoint (strcat "\nPick insertion point for " (car item_data) ": ")))
           (if insert_pt
             (progn
               (princ (strcat "\n→ Importing circuit: " (car item_data)))
-              (ucb:circuit_import item_path insert_pt scale rotation nil))
+              (ucb:circuit_import item_path insert_pt *ucb_import_scale* *ucb_import_rotation* nil)
+              (alert (strcat "Circuit imported: " (car item_data) "\nAt: " 
+                            (rtos (car insert_pt) 2 2) "," (rtos (cadr insert_pt) 2 2))))
             (princ "\n✗ No insertion point selected")))))
     (princ "\n✗ No item selected")))
 
 (defun ucb:do_import_csv ( / csv_path csv_data item_name item_path insert_pt scale rotation count)
-  (done_dialog 2)
-  
   (setq csv_path (ucb:get_csv_path *ucb_content_type*))
   
   (if (not (findfile csv_path))
