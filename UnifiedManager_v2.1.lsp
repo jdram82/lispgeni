@@ -683,7 +683,7 @@
       (if (findfile export_path)
         (progn
           (ucb:save_to_csv *ucb_step2_name* *ucb_category* export_path 
-                          *ucb_step3_basepoint* *ucb_step3_basepoint*)
+                          *ucb_step3_basepoint* *ucb_step3_basepoint* *ucb_content_type*)
           (alert (strcat "SUCCESS!\n\n"
                         "Name: " *ucb_step2_name* "\n"
                         "File: " export_path "\n"
