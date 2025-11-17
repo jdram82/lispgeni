@@ -878,8 +878,34 @@
           (alert (strcat "Block imported: " (car item_data))))
         
         (progn
-          (princ (strcat "\n→ Select insertion point for: " (car item_data)))
-          (setq insert_pt (getpoint (strcat "\nPick insertion point for " (car item_data) ": ")))
+          ;; For circuits, check CSV for coordinates first
+          (setq csv_path (ucb:get_csv_path *ucb_content_type*))
+          (setq insert_pt nil)
+          
+          (if (and (findfile csv_path)
+                   (setq csv_data (ucb:read_csv csv_path)))
+            (progn
+              ;; Search for this circuit in CSV
+              (foreach entry (cdr csv_data)
+                (if (and (not insert_pt)
+                         (= (car entry) (car item_data))
+                         (>= (length entry) 6))
+                  (setq insert_pt 
+                    (list (atof (nth 3 entry))   ; BaseX
+                          (atof (nth 4 entry))   ; BaseY
+                          (atof (nth 5 entry)))))) ; BaseZ
+              
+              (if insert_pt
+                (princ (strcat "\n✓ Using CSV coordinates: " 
+                              (rtos (car insert_pt) 2 2) "," 
+                              (rtos (cadr insert_pt) 2 2))))))
+          
+          ;; If no CSV coordinates, ask user
+          (if (not insert_pt)
+            (progn
+              (princ (strcat "\n→ Select insertion point for: " (car item_data)))
+              (setq insert_pt (getpoint (strcat "\nPick insertion point for " (car item_data) ": ")))))
+          
           (if insert_pt
             (progn
               (princ (strcat "\n→ Importing circuit: " (car item_data)))
@@ -906,17 +932,8 @@
       
       (if (= *ucb_content_type* "blocks")
         (progn
-          (princ "\n→ BATCH IMPORT FROM CSV (Blocks)")
-          (foreach entry (cdr csv_data)  ; Skip header
-            (setq item_name (car entry))
-            (setq item_path (caddr entry))
-            
-            (if (findfile item_path)
-              (progn
-                (princ (strcat "\n  Importing: " item_name))
-                (ucb:block_import item_path *ucb_import_method*)
-                (setq count (1+ count)))
-              (princ (strcat "\n  ✗ File not found: " item_path)))))
+          (alert "Block CSV import not supported!\n\nBlocks don't have coordinate data.\nUse regular Import for blocks.")
+          (princ "\n✗ Block CSV import not supported - blocks don't have coordinates"))
         
         (progn
           (princ "\n→ BATCH IMPORT FROM CSV (Circuits)")
@@ -925,15 +942,16 @@
             (setq item_path (caddr entry))
             
             (if (and (findfile item_path)
-                     (>= (length entry) 7))
+                     (>= (length entry) 6))
               (progn
                 (setq insert_pt 
-                  (list (atof (nth 6 entry))   ; InsertX
-                        (atof (nth 7 entry))   ; InsertY
-                        (atof (nth 8 entry)))) ; InsertZ
+                  (list (atof (nth 3 entry))   ; BaseX
+                        (atof (nth 4 entry))   ; BaseY
+                        (atof (nth 5 entry)))) ; BaseZ
                 
                 (princ (strcat "\n  Importing: " item_name 
-                               " at " (vl-princ-to-string insert_pt)))
+                               " at (" (rtos (car insert_pt) 2 2) "," 
+                               (rtos (cadr insert_pt) 2 2) ")"))
                 
                 (ucb:circuit_import item_path insert_pt 1.0 0.0 nil)
                 (setq count (1+ count)))
