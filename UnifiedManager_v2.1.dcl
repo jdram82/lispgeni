@@ -3,284 +3,210 @@
 // ===========================================================================
 
 ucbmanager : dialog {
-  label = "Unified Circuit & Block Manager v2.1";
+  label = "Unified Manager v2.1 - Circuit & Block Export/Import";
+  initial_focus = "btn_step1";
   
-  // Operation Mode
-  : boxed_row {
-    label = "Operation Mode";
-    : radio_row {
-      key = "operation_mode";
-      : radio_button {
-        key = "mode_export";
-        label = "Export";
-        value = "1";
-      }
-      : radio_button {
-        key = "mode_import";
-        label = "Import";
-      }
-    }
-  }
-  
-  : spacer { height = 0.5; }
-  
-  // Content Type
-  : boxed_row {
-    label = "Content Type";
-    : radio_row {
-      key = "content_type";
-      : radio_button {
-        key = "type_blocks";
-        label = "Block Definitions";
-        value = "1";
-      }
-      : radio_button {
-        key = "type_circuits";
-        label = "Circuit Assemblies";
+  // Compact header row with mode and type
+  : row {
+    : boxed_column {
+      label = "Mode";
+      width = 22;
+      : radio_column {
+        key = "operation_mode";
+        : radio_button {
+          key = "mode_export";
+          label = "Export";
+          value = "1";
+        }
+        : radio_button {
+          key = "mode_import";
+          label = "Import";
+        }
       }
     }
-  }
-  
-  : spacer { height = 0.5; }
-  
-  // Library Folder
-  : boxed_column {
-    label = "Library Configuration";
-    : row {
-      : text {
-        label = "Library Folder:";
-      }
-    }
-    : row {
-      : edit_box {
-        key = "library_folder";
-        width = 40;
-      }
-      : button {
-        key = "btn_browse_folder";
-        label = "Browse...";
-        width = 10;
-      }
-    }
-  }
-  
-  : spacer { height = 0.5; }
-  
-  // Export Panel
-  : boxed_column {
-    label = "EXPORT Settings";
-    key = "export_panel";
-    
-    : text {
-      label = "Selection Mode:";
-    }
-    
-    : radio_column {
-      key = "export_selection_mode";
-      : radio_button {
-        key = "export_single";
-        label = "Single Item";
-        value = "1";
-      }
-      : radio_button {
-        key = "export_batch";
-        label = "Batch Mode";
-      }
-      : radio_button {
-        key = "export_all";
-        label = "Export All";
-      }
-    }
-    
-    : spacer { height = 0.3; }
-    
-    : text {
-      label = "Export Method:";
-    }
-    : popup_list {
-      key = "export_method";
-      width = 40;
-    }
-    
-    : spacer { height = 0.3; }
-    
-    : row {
-      : text {
-        label = "Category:";
-      }
-      : popup_list {
-        key = "export_category";
-        width = 25;
-      }
-    }
-    
-    : spacer { height = 0.5; }
     
     : boxed_column {
-      label = "Step-by-Step Export";
-      
-      : button {
-        key = "btn_step1";
-        label = "Step 1: SELECT Entities";
-        width = 30;
+      label = "Content Type";
+      width = 22;
+      : radio_column {
+        key = "content_type";
+        : radio_button {
+          key = "type_blocks";
+          label = "Blocks";
+          value = "1";
+        }
+        : radio_button {
+          key = "type_circuits";
+          label = "Circuits";
+        }
       }
-      
-      : button {
-        key = "btn_step2";
-        label = "Step 2: ENTER Name";
-        width = 30;
+    }
+  }
+  
+  : spacer { height = 0.3; }
+  
+  // Compact library folder row
+  : row {
+    : text {
+      label = "Library:";
+      width = 8;
+    }
+    : edit_box {
+      key = "library_folder";
+      width = 30;
+    }
+    : button {
+      key = "btn_browse_folder";
+      label = "...";
+      width = 3;
+      fixed_width = true;
+    }
+  }
+  
+  : spacer { height = 0.3; }
+  
+  // Export Panel - Compact and visual
+  : boxed_column {
+    label = "▼ EXPORT Workflow";
+    key = "export_panel";
+    
+    // Compact settings row
+    : row {
+      : column {
+        width = 20;
+        : text {
+          label = "Category:";
+        }
+        : popup_list {
+          key = "export_category";
+          width = 18;
+        }
       }
+      : column {
+        width = 22;
+        : text {
+          label = "Method:";
+        }
+        : popup_list {
+          key = "export_method";
+          width = 20;
+        }
+      }
+    }
+    
+    : spacer { height = 0.2; }
+    
+    // Visual step workflow with icons
+    : boxed_column {
+      label = "› Quick Export Steps";
       
-      : button {
-        key = "btn_step3";
-        label = "Step 3: PICK Base Point";
-        width = 30;
+      : row {
+        : button {
+          key = "btn_step1";
+          label = "① Select";
+          width = 13;
+          fixed_width = true;
+        }
+        : button {
+          key = "btn_step2";
+          label = "② Name";
+          width = 13;
+          fixed_width = true;
+        }
+        : button {
+          key = "btn_step3";
+          label = "③ Base Point";
+          width = 13;
+          fixed_width = true;
+        }
       }
       
       : text {
         key = "txt_export_status";
-        label = "Ready";
+        label = "⚡ Ready to start";
         alignment = centered;
       }
       
       : button {
         key = "btn_complete_export";
-        label = "COMPLETE EXPORT";
-        width = 30;
+        label = "✓ COMPLETE EXPORT";
+        width = 42;
+        is_default = true;
       }
     }
   }
   
-  : spacer { height = 0.5; }
+  : spacer { height = 0.3; }
   
-  // Import Panel
+  // Import Panel - Compact
   : boxed_column {
-    label = "IMPORT Settings";
+    label = "▼ IMPORT Workflow";
     key = "import_panel";
-    
-    : text {
-      label = "Source Selection:";
-    }
-    
-    : radio_column {
-      key = "import_source_mode";
-      : radio_button {
-        key = "import_from_library";
-        label = "Import from Library";
-        value = "1";
-      }
-      : radio_button {
-        key = "import_from_csv";
-        label = "Import from CSV";
-      }
-      : radio_button {
-        key = "import_manual";
-        label = "Manual Selection";
-      }
-    }
-    
-    : spacer { height = 0.3; }
-    
-    : text {
-      label = "Available Items:";
-    }
     
     : list_box {
       key = "import_list";
-      height = 8;
-      width = 45;
+      height = 6;
+      width = 42;
       multiple_select = true;
     }
     
     : row {
       : button {
         key = "btn_refresh_list";
-        label = "Refresh";
+        label = "↻ Refresh";
         width = 10;
       }
       : button {
         key = "btn_load_csv";
-        label = "Load CSV";
+        label = "📄 CSV";
         width = 10;
       }
-    }
-    
-    : spacer { height = 0.3; }
-    
-    : text {
-      label = "Import Options:";
+      : popup_list {
+        key = "import_method";
+        width = 18;
+      }
     }
     
     : row {
       : text {
         label = "Scale:";
+        width = 6;
       }
       : edit_box {
         key = "import_scale";
         value = "1.0";
-        width = 8;
+        width = 6;
       }
       : text {
-        label = "  Rotation:";
+        label = "Rotate:";
+        width = 6;
       }
       : edit_box {
         key = "import_rotation";
         value = "0";
-        width = 8;
+        width = 6;
       }
-    }
-    
-    : spacer { height = 0.3; }
-    
-    : text {
-      label = "Import Method:";
-    }
-    : popup_list {
-      key = "import_method";
-      width = 40;
-    }
-    
-    : spacer { height = 0.5; }
-    
-    : button {
-      key = "btn_start_import";
-      label = "START IMPORT";
-      width = 30;
+      : button {
+        key = "btn_start_import";
+        label = "▶ IMPORT";
+        width = 12;
+      }
     }
   }
   
-  : spacer { height = 0.3; }
+  : spacer { height = 0.2; }
   
-  // Status
-  : boxed_column {
-    label = "Status";
+  // Compact status bar
+  : row {
     : text {
       key = "status_text";
       label = "Ready";
-      width = 45;
+      width = 32;
     }
-    : text {
-      key = "progress_text";
-      label = "";
-      width = 45;
-    }
-  }
-  
-  : spacer { height = 0.3; }
-  
-  // Bottom Buttons
-  : row {
     : button {
       key = "accept";
-      label = "Close";
-      is_default = true;
-      width = 10;
-    }
-    : button {
-      key = "cancel";
-      label = "Cancel";
-      is_cancel = true;
-      width = 10;
+      label = "✓ Close";
+      width = 8;
     }
   }
 }
