@@ -42,6 +42,7 @@
 (setq *ucb_selection_count* nil)    ; Count of selected entities
 (setq *ucb_step2_name* nil)         ; Step 2: Circuit/block name
 (setq *ucb_step3_basepoint* nil)    ; Step 3: Base point
+(setq *ucb_export_csv_path* nil)    ; Export: User-chosen CSV file path
 
 ;; Import workflow variables
 (setq *ucb_import_scale* 1.0)       ; Import scale factor
@@ -114,9 +115,28 @@
       "Block_Coordinates.csv"
       "Circuit_Coordinates.csv")))
 
-(defun ucb:save_to_csv (item_name category dwg_file base_pt insert_pt content_type / 
-                        csv_path csv_handle date_str time_str)
-  (setq csv_path (ucb:get_csv_path content_type))
+(defun ucb:browse_csv_save_location (content_type / default_name csv_path)
+  ;; Suggest default name based on content type
+  (setq default_name 
+    (strcat *ucb_library_folder* "\\" 
+      (if (= content_type "blocks")
+        "Block_Coordinates.csv"
+        "Circuit_Coordinates.csv")))
+  
+  ;; Let user browse and choose location/name
+  (setq csv_path (getfiled 
+    (strcat "Save " 
+      (if (= content_type "blocks") "Block" "Circuit") 
+      " Coordinates CSV File") 
+    default_name "csv" 1))
+  
+  csv_path)
+
+(defun ucb:save_to_csv (item_name category dwg_file base_pt insert_pt content_type csv_path / 
+                        csv_handle date_str time_str)
+  ;; Use provided csv_path or default
+  (if (not csv_path)
+    (setq csv_path (ucb:get_csv_path content_type)))
   
   ;; Create CSV with header if doesn't exist
   (if (not (findfile csv_path))
@@ -827,7 +847,7 @@
 
 ;; Step 2 is now handled by dialog input field - no separate function needed
 
-(defun ucb:do_step3 (/ pt)
+(defun ucb:do_step3 (/ pt csv_path)
   (if (not *ucb_step1_ss*)
     (progn
       (alert "Please SELECT entities first!\n\nClick '① SELECT Entities' button.")
@@ -842,7 +862,18 @@
         (if pt
           (progn
             (setq *ucb_step3_basepoint* pt)
-            (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2))))
+            (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2)))
+            
+            ;; Ask for CSV save location
+            (princ "\n→ Choose CSV file location and name...")
+            (setq csv_path (ucb:browse_csv_save_location *ucb_content_type*))
+            (if csv_path
+              (progn
+                (setq *ucb_export_csv_path* csv_path)
+                (princ (strcat "\n✓ CSV will be saved to: " csv_path)))
+              (progn
+                (princ "\n⚠ No CSV path selected - will use default location")
+                (setq *ucb_export_csv_path* nil))))
           (setq *ucb_step3_basepoint* nil))
         (princ)))))
 
@@ -875,20 +906,22 @@
       (if (findfile export_path)
         (progn
           (ucb:save_to_csv *ucb_step2_name* *ucb_category* export_path 
-                          *ucb_step3_basepoint* *ucb_step3_basepoint* *ucb_content_type*)
+                          *ucb_step3_basepoint* *ucb_step3_basepoint* *ucb_content_type* *ucb_export_csv_path*)
           (alert (strcat "SUCCESS!\n\n"
                         "Name: " *ucb_step2_name* "\n"
                         "File: " export_path "\n"
                         "Category: " *ucb_category* "\n"
                         "Entities: " (itoa (sslength *ucb_step1_ss*)) "\n"
                         "Base Point: " (rtos (car *ucb_step3_basepoint*) 2 2) "," 
-                                      (rtos (cadr *ucb_step3_basepoint*) 2 2) "\n\n"
+                                      (rtos (cadr *ucb_step3_basepoint*) 2 2) "\n"
+                        "CSV File: " (if *ucb_export_csv_path* *ucb_export_csv_path* "Default location") "\n\n"
                         "Coordinates saved to CSV."))
           ;; Clear step data
           (setq *ucb_step1_ss* nil)
           (setq *ucb_selection_count* nil)
           (setq *ucb_step2_name* nil)
-          (setq *ucb_step3_basepoint* nil))
+          (setq *ucb_step3_basepoint* nil)
+          (setq *ucb_export_csv_path* nil))
         (alert "Export failed - WBLOCK error.")))
     (alert "Please complete all 3 steps!\n\n① SELECT Entities\n② Enter NAME in field\n③ PICK Base Point"))
   (princ))
@@ -914,7 +947,7 @@
           
           (if result
             (progn
-              (ucb:save_to_csv item_name *ucb_category* export_path)
+              (ucb:save_to_csv item_name *ucb_category* export_path nil nil "blocks" nil)
               (princ (strcat "\n✓ Exported: " item_name)))
             (princ (strcat "\n✗ Failed to export: " item_name))))
         (princ "\n✗ Invalid block name")))
@@ -969,7 +1002,7 @@
                   
                   (if (findfile export_path)
                     (progn
-                      (ucb:save_to_csv item_name *ucb_category* export_path base_pt base_pt)
+                      (ucb:save_to_csv item_name *ucb_category* export_path base_pt base_pt "circuits" nil)
                       (princ "\n╔══════════════════════════════════════════════════════╗")
                       (princ (strcat "\n║ ✓ SUCCESS: " item_name))
                       (princ (strcat "\n║   File: " export_path))
@@ -1003,7 +1036,7 @@
         
         (if result
           (progn
-            (ucb:save_to_csv item *ucb_category* export_path)
+            (ucb:save_to_csv item *ucb_category* export_path nil nil "blocks" nil)
             (setq success_count (1+ success_count)))
           (setq fail_count (1+ fail_count))))
       
