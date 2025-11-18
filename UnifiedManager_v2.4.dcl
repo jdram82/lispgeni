@@ -1,9 +1,9 @@
 // ===========================================================================
-// UNIFIED CIRCUIT & BLOCK MANAGER v2.3 DCL
+// UNIFIED CIRCUIT & BLOCK MANAGER v2.4 DCL
 // ===========================================================================
 
 ucbmanager : dialog {
-  label = "Unified Manager v2.3 - Circuit & Block Export/Import";
+  label = "Unified Manager v2.4 - Circuit & Block Export/Import";
   initial_focus = "btn_step1";
   
   // Compact header row with mode and type
