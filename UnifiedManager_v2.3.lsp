@@ -699,17 +699,127 @@
 
 
 ;; ═══════════════════════════════════════════════════════════════════════════
+;; SELECTION ANALYSIS FUNCTIONS
+;; ═══════════════════════════════════════════════════════════════════════════
+
+(defun ucb:analyze_selection (ss / i ent ent_type block_count other_count ent_data block_names)
+  (setq block_count 0)
+  (setq other_count 0)
+  (setq block_names '())
+  
+  (setq i 0)
+  (repeat (sslength ss)
+    (setq ent (ssname ss i))
+    (setq ent_data (entget ent))
+    (setq ent_type (cdr (assoc 0 ent_data)))
+    
+    (cond
+      ((= ent_type "INSERT")
+       (setq block_count (1+ block_count))
+       (setq block_names (cons (cdr (assoc 2 ent_data)) block_names)))
+      (T
+       (setq other_count (1+ other_count))))
+    
+    (setq i (1+ i)))
+  
+  (list block_count other_count (reverse block_names)))
+
+(defun ucb:show_selection_analysis (analysis_result / block_count other_count block_names msg recommended_type)
+  (setq block_count (car analysis_result))
+  (setq other_count (cadr analysis_result))
+  (setq block_names (caddr analysis_result))
+  
+  (setq msg "═══════════════════════════════════════════════════\n")
+  (setq msg (strcat msg "SELECTION ANALYSIS\n"))
+  (setq msg (strcat msg "═══════════════════════════════════════════════════\n\n"))
+  (setq msg (strcat msg "Block References: " (itoa block_count) "\n"))
+  (setq msg (strcat msg "Other Entities: " (itoa other_count) " (lines, arcs, text, etc.)\n\n"))
+  
+  (cond
+    ((and (> block_count 0) (= other_count 0))
+     (setq recommended_type "BLOCKS")
+     (setq msg (strcat msg "DETECTED TYPE: Pure Block References\n"))
+     (setq msg (strcat msg "───────────────────────────────────────────────────\n"))
+     (setq msg (strcat msg "RECOMMENDATION:\n"))
+     (setq msg (strcat msg "• Switch to 'Blocks' mode\n"))
+     (setq msg (strcat msg "• Use block export to preserve definitions\n\n")))
+    
+    ((and (= block_count 0) (> other_count 0))
+     (setq recommended_type "CIRCUITS")
+     (setq msg (strcat msg "DETECTED TYPE: Geometry Only\n"))
+     (setq msg (strcat msg "───────────────────────────────────────────────────\n"))
+     (setq msg (strcat msg "RECOMMENDATION:\n"))
+     (setq msg (strcat msg "• Switch to 'Circuits' mode\n"))
+     (setq msg (strcat msg "• Suitable for lines, arcs, text without blocks\n\n")))
+    
+    ((and (> block_count 0) (> other_count 0))
+     (setq recommended_type "CIRCUITS")
+     (setq msg (strcat msg "DETECTED TYPE: Mixed Circuit Assembly\n"))
+     (setq msg (strcat msg "───────────────────────────────────────────────────\n"))
+     (setq msg (strcat msg "RECOMMENDATION:\n"))
+     (setq msg (strcat msg "• Switch to 'Circuits' mode\n"))
+     (setq msg (strcat msg "• This preserves blocks AND geometry together\n"))
+     (setq msg (strcat msg "• All block definitions will be embedded\n\n")))
+    
+    (T
+     (setq recommended_type "UNKNOWN")
+     (setq msg (strcat msg "DETECTED TYPE: Unknown\n\n"))))
+  
+  (if (> block_count 0)
+    (progn
+      (setq msg (strcat msg "Block References Found:\n"))
+      (foreach blk_name block_names
+        (setq msg (strcat msg "  • " blk_name "\n")))
+      (setq msg (strcat msg "\n"))))
+  
+  (setq msg (strcat msg "═══════════════════════════════════════════════════\n"))
+  (setq msg (strcat msg "Do you want to continue with current mode?\n\n"))
+  (setq msg (strcat msg "Current Mode: " (if (= *ucb_content_type* "blocks") "BLOCKS" "CIRCUITS") "\n"))
+  (setq msg (strcat msg "Recommended: " recommended_type))
+  
+  (list msg recommended_type))
+
+;; ═══════════════════════════════════════════════════════════════════════════
 ;; STEP-BY-STEP WORKFLOW FUNCTIONS
 ;; ═══════════════════════════════════════════════════════════════════════════
 
-(defun ucb:do_step1 (/ ss)
+(defun ucb:do_step1 (/ ss analysis_result msg_data msg recommended_type user_choice)
   (princ "\n→ Step 1: SELECT entities...")
   (setq ss (ssget))
   (if ss
     (progn
       (setq *ucb_step1_ss* ss)
       (setq *ucb_selection_count* (itoa (sslength ss)))
-      (princ (strcat "\n✓ Selected " *ucb_selection_count* " entities")))
+      (princ (strcat "\n✓ Selected " *ucb_selection_count* " entities"))
+      
+      ;; Analyze selection
+      (setq analysis_result (ucb:analyze_selection ss))
+      (setq msg_data (ucb:show_selection_analysis analysis_result))
+      (setq msg (car msg_data))
+      (setq recommended_type (cadr msg_data))
+      
+      ;; Show analysis to user
+      (initget "Yes No")
+      (setq user_choice (getkword (strcat "\n" msg "\n\nContinue? [Yes/No] <Yes>: ")))
+      (if (or (not user_choice) (= user_choice "Yes"))
+        (progn
+          ;; Auto-switch mode if recommended type differs
+          (if (and (= recommended_type "BLOCKS") (= *ucb_content_type* "circuits"))
+            (progn
+              (setq *ucb_content_type* "blocks")
+              (alert "Mode automatically switched to BLOCKS\n\nReopen dialog to see updated mode.")
+              (setq *ucb_step1_ss* nil)
+              (setq *ucb_selection_count* "0")))
+          (if (and (= recommended_type "CIRCUITS") (= *ucb_content_type* "blocks"))
+            (progn
+              (setq *ucb_content_type* "circuits")
+              (alert "Mode automatically switched to CIRCUITS\n\nReopen dialog to see updated mode.")
+              (setq *ucb_step1_ss* nil)
+              (setq *ucb_selection_count* "0"))))
+        (progn
+          (princ "\n✗ Selection cancelled by user")
+          (setq *ucb_step1_ss* nil)
+          (setq *ucb_selection_count* "0"))))
     (progn
       (setq *ucb_step1_ss* nil)
       (setq *ucb_selection_count* "0")))
@@ -1021,12 +1131,14 @@
 (princ "\n║    UCB / UNIFIEDMANAGER - Open Unified Manager Dialog         ║")
 (princ "\n║                                                                 ║")
 (princ "\n║  Features:                                                     ║")
+(princ "\n║    • Automatic Selection Detection (Blocks/Circuits/Mixed)    ║")
 (princ "\n║    • Export/Import Block Definitions                           ║")
 (princ "\n║    • Export/Import Circuit Assemblies                          ║")
 (princ "\n║    • 5 Export Methods & 5 Import Methods                       ║")
 (princ "\n║    • CSV Coordinate Tracking                                   ║")
 (princ "\n║    • Batch Operations                                          ║")
 (princ "\n║    • Category Organization                                     ║")
+(princ "\n║    • Comprehensive Attribute Preservation                      ║")
 (princ "\n║                                                                 ║")
 (princ "\n║  Library: C:\\Temp\\Circuit_Library                            ║")
 (princ "\n╚════════════════════════════════════════════════════════════════╝")
