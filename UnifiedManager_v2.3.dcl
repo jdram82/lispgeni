@@ -134,6 +134,27 @@ ucbmanager : dialog {
         width = 42;
       }
       
+      : spacer { height = 0.2; }
+      
+      : row {
+        : text {
+          label = "④ CSV File:";
+          width = 10;
+        }
+        : button {
+          key = "btn_browse_csv";
+          label = "Browse...";
+          width = 12;
+        }
+        : text {
+          key = "txt_csv_path";
+          label = "(Default)";
+          width = 18;
+        }
+      }
+      
+      : spacer { height = 0.2; }
+      
       : text {
         key = "txt_export_status";
         label = "⚡ Ready to start";

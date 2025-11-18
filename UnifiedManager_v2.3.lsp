@@ -628,9 +628,15 @@
     (set_tile "export_name" *ucb_step2_name*)
     (set_tile "export_name" ""))
   
+  ;; Set CSV path display
+  (if *ucb_export_csv_path*
+    (set_tile "txt_csv_path" (strcat (vl-filename-base *ucb_export_csv_path*) ".csv"))
+    (set_tile "txt_csv_path" "(Default)"))
+  
   ;; Step-by-step workflow buttons
   (action_tile "btn_step1" "(done_dialog 10)")
   (action_tile "btn_step3" "(done_dialog 12)")
+  (action_tile "btn_browse_csv" "(ucb:browse_export_csv)")
   (action_tile "btn_complete_export" "(done_dialog 13)")
   
   (action_tile "btn_start_import" "(done_dialog 20)")
@@ -688,6 +694,22 @@
         (setq *ucb_import_folder* folder))
       (set_tile "import_folder" *ucb_import_folder*)
       (ucb:refresh_library_list))))
+
+(defun ucb:browse_export_csv ( / csv_path csv_name)
+  ;; Browse for CSV save location for export
+  (setq csv_path (ucb:browse_csv_save_location *ucb_content_type*))
+  
+  (if csv_path
+    (progn
+      (setq *ucb_export_csv_path* csv_path)
+      ;; Update dialog display to show filename only
+      (setq csv_name (vl-filename-base csv_path))
+      (set_tile "txt_csv_path" (strcat csv_name ".csv"))
+      (princ (strcat "\n✓ Export CSV: " csv_path)))
+    (progn
+      (setq *ucb_export_csv_path* nil)
+      (set_tile "txt_csv_path" "(Default)")
+      (princ "\n⚠ No CSV selected - using default"))))
 
 (defun ucb:browse_csv ( / csv_file csv_dir csv_data entry_count)
   ;; Try to get CSV from library folder first
@@ -847,7 +869,7 @@
 
 ;; Step 2 is now handled by dialog input field - no separate function needed
 
-(defun ucb:do_step3 (/ pt csv_path)
+(defun ucb:do_step3 (/ pt)
   (if (not *ucb_step1_ss*)
     (progn
       (alert "Please SELECT entities first!\n\nClick '① SELECT Entities' button.")
@@ -862,18 +884,7 @@
         (if pt
           (progn
             (setq *ucb_step3_basepoint* pt)
-            (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2)))
-            
-            ;; Ask for CSV save location
-            (princ "\n→ Choose CSV file location and name...")
-            (setq csv_path (ucb:browse_csv_save_location *ucb_content_type*))
-            (if csv_path
-              (progn
-                (setq *ucb_export_csv_path* csv_path)
-                (princ (strcat "\n✓ CSV will be saved to: " csv_path)))
-              (progn
-                (princ "\n⚠ No CSV path selected - will use default location")
-                (setq *ucb_export_csv_path* nil))))
+            (princ (strcat "\n✓ Base point: " (rtos (car pt) 2 2) "," (rtos (cadr pt) 2 2))))
           (setq *ucb_step3_basepoint* nil))
         (princ)))))
 
