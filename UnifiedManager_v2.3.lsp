@@ -230,8 +230,9 @@
       (setvar "CMDECHO" 0)
       (setvar "FILEDIA" 0)
       (setvar "EXPERT" 5)
+      (setvar "ATTDIA" 0)      ; Disable attribute dialog for automation
       (if (= platform "ACADE")
-        (setvar "ATTREQ" 1))
+        (setvar "ATTREQ" 1))    ; Keep attributes for AutoCAD Electrical
       
       (if (findfile dwg_path)
         (vl-file-delete dwg_path))
@@ -265,6 +266,7 @@
       (setvar "CMDECHO" 1)
       (setvar "FILEDIA" 1)
       (setvar "EXPERT" 0)
+      (setvar "ATTDIA" 1)      ; Restore attribute dialog
       
       (if (findfile dwg_path)
         T
@@ -296,6 +298,8 @@
 (defun ucb:block_import (dwg_path method / result)
   (setvar "CMDECHO" 0)
   (setvar "FILEDIA" 0)
+  (setvar "ATTDIA" 0)      ; Disable attribute dialog
+  (setvar "ATTREQ" 1)      ; Preserve attributes
   
   (cond
     ;; Method 0: XREF
@@ -329,6 +333,7 @@
   
   (setvar "CMDECHO" 1)
   (setvar "FILEDIA" 1)
+  (setvar "ATTDIA" 1)      ; Restore attribute dialog
   T)
 
 (defun ucb:insert_vla (dwg_path / acad doc result)
@@ -361,6 +366,8 @@
       (setvar "CMDECHO" 0)
       (setvar "FILEDIA" 0)
       (setvar "EXPERT" 5)
+      (setvar "ATTDIA" 0)      ; Disable attribute dialog
+      (setvar "ATTREQ" 1)      ; Preserve attributes in blocks
       
       (if (findfile export_path)
         (vl-file-delete export_path))
@@ -372,6 +379,7 @@
       (setvar "CMDECHO" 1)
       (setvar "FILEDIA" 1)
       (setvar "EXPERT" 0)
+      (setvar "ATTDIA" 1)      ; Restore attribute dialog
       
       (if (findfile export_path)
         (progn
@@ -385,6 +393,8 @@
   (setvar "CMDECHO" 0)
   (setvar "FILEDIA" 0)
   (setvar "EXPERT" 5)
+  (setvar "ATTDIA" 0)      ; Disable attribute dialog for automation
+  (setvar "ATTREQ" 1)      ; Preserve attributes during import
   
   (setq rotation (* rotation (/ pi 180.0)))
   
@@ -398,6 +408,7 @@
   (setvar "CMDECHO" 1)
   (setvar "FILEDIA" 1)
   (setvar "EXPERT" 0)
+  (setvar "ATTDIA" 1)      ; Restore attribute dialog
   
   (princ "\n✓ Circuit imported")
   T)
@@ -736,6 +747,8 @@
       (setvar "CMDECHO" 0)
       (setvar "FILEDIA" 0)
       (setvar "EXPERT" 5)
+      (setvar "ATTDIA" 0)      ; Disable attribute dialog
+      (setvar "ATTREQ" 1)      ; Preserve attributes in blocks
       
       (if (findfile export_path)
         (vl-file-delete export_path))
@@ -747,6 +760,7 @@
       (setvar "CMDECHO" 1)
       (setvar "FILEDIA" 1)
       (setvar "EXPERT" 0)
+      (setvar "ATTDIA" 1)      ; Restore attribute dialog
       
       (if (findfile export_path)
         (progn
