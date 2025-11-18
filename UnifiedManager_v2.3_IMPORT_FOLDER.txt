@@ -1,0 +1,94 @@
+═══════════════════════════════════════════════════════════════════════════
+UNIFIED MANAGER v2.3 - SEPARATE IMPORT FOLDER FEATURE
+═══════════════════════════════════════════════════════════════════════════
+
+NEW FEATURE:
+  Separate import folder selection - allows choosing different library 
+  folder for import operations independent from export folder
+
+CHANGES MADE:
+  1. Added new global variable: *ucb_import_folder*
+  2. Added "Import From:" field with browse button in Import panel
+  3. Modified ucb:get_library_files to accept use_import_folder parameter
+  4. Created new ucb:browse_import_folder function
+  5. Import list now uses import folder, export uses library folder
+
+HOW IT WORKS:
+  ─────────────────────────────────────────────────────────────────────────
+  EXPORT FOLDER:
+    • Library: [path] [...] ← Used for EXPORT operations
+    • Determines where exported circuits/blocks are saved
+    • Organized by categories (General, Motor_Circuit, etc.)
+  
+  IMPORT FOLDER:
+    • Import From: [path] [...] ← Used for IMPORT operations
+    • Determines where to search for circuits/blocks to import
+    • Can be different from export folder
+    • Click [...] to browse and select different folder
+    • Click ↻ Refresh to update list after changing folder
+
+USAGE SCENARIOS:
+  ─────────────────────────────────────────────────────────────────────────
+  Scenario 1: Import from different project library
+    1. Set Library folder: C:\Temp\Circuit_Library (for exports)
+    2. Set Import From: D:\OtherProject\Circuits (for imports)
+    3. Export saves to Circuit_Library
+    4. Import loads from OtherProject\Circuits
+  
+  Scenario 2: Share library between projects
+    1. Export to your local: C:\Temp\Circuit_Library
+    2. Import from network: \\Server\Shared\Circuits
+    3. Work with circuits from shared library
+    4. Export your own to local library
+  
+  Scenario 3: Same folder for both
+    1. Set both folders to same path (default behavior)
+    2. Export and import use same library location
+
+UI LAYOUT:
+  ─────────────────────────────────────────────────────────────────────────
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ Library:    [C:\Temp\Circuit_Library                    ] [...]     │
+  └─────────────────────────────────────────────────────────────────────┘
+  
+  ▼ EXPORT Workflow
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ [Categories] [Methods]                                              │
+  │ ① SELECT → ② Name → ③ Base Point → ✓ COMPLETE                     │
+  └─────────────────────────────────────────────────────────────────────┘
+  
+  ▼ IMPORT Workflow
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ Import From: [D:\OtherProject\Circuits              ] [...]         │
+  │                                                                      │
+  │ [List of available circuits from import folder]                     │
+  │                                                                      │
+  │ [↻ Refresh] [📄 CSV] [Methods ▼]                                   │
+  │ Scale: [1.0] Rotate: [0] [▶ IMPORT]                                │
+  └─────────────────────────────────────────────────────────────────────┘
+
+BENEFITS:
+  ✅ Export to local project folder
+  ✅ Import from shared network library
+  ✅ Import from backup/archive locations
+  ✅ Work with multiple library locations
+  ✅ Independent folder management
+  ✅ No need to copy files between folders
+
+TECHNICAL DETAILS:
+  • *ucb_library_folder* - Export destination folder
+  • *ucb_import_folder* - Import source folder
+  • ucb:get_library_files(content_type, use_import_folder)
+    - use_import_folder = T → uses *ucb_import_folder*
+    - use_import_folder = nil → uses *ucb_library_folder*
+  • Import list automatically refreshes when folder changed
+  • Both folders scan category subfolders and root folder
+
+COMMIT:
+  Git commit: 7042871
+  Branch: dev-macro
+  Message: "Add separate import folder selection - allows choosing different folder for import"
+
+VERSION: v2.3 (Updated)
+
+═══════════════════════════════════════════════════════════════════════════
