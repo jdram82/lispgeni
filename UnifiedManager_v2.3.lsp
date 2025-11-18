@@ -21,6 +21,9 @@
 (if (not *ucb_library_folder*) 
   (setq *ucb_library_folder* "C:\\Temp\\Circuit_Library"))
 
+(if (not *ucb_import_folder*) 
+  (setq *ucb_import_folder* *ucb_library_folder*))
+
 ;; Store the path where this LSP was loaded from
 (if (not *ucb_lsp_path*)
   (setq *ucb_lsp_path* (findfile "UnifiedManager_v2.3.lsp")))
@@ -420,12 +423,15 @@
   
   (reverse block_list))
 
-(defun ucb:get_library_files (content_type / folder file_list all_files)
+(defun ucb:get_library_files (content_type use_import_folder / folder file_list all_files base_folder)
   (setq all_files '())
+  
+  ;; Use import folder if specified, otherwise use library folder
+  (setq base_folder (if use_import_folder *ucb_import_folder* *ucb_library_folder*))
   
   ;; Get files from category subfolders
   (foreach category *ucb_categories*
-    (setq folder (strcat *ucb_library_folder* "\\" category))
+    (setq folder (strcat base_folder "\\" category))
     (if (findfile folder)
       (progn
         (setq file_list (vl-directory-files folder "*.dwg"))
@@ -435,10 +441,10 @@
                   all_files))))))
   
   ;; Get files from root folder
-  (setq file_list (vl-directory-files *ucb_library_folder* "*.dwg"))
+  (setq file_list (vl-directory-files base_folder "*.dwg"))
   (foreach file file_list
     (setq all_files 
-      (cons (list file "Root" (strcat *ucb_library_folder* "\\" file)) 
+      (cons (list file "Root" (strcat base_folder "\\" file)) 
             all_files)))
   
   (reverse all_files))
@@ -532,6 +538,7 @@
   
   ;; Set library folder
   (set_tile "library_folder" *ucb_library_folder*)
+  (set_tile "import_folder" *ucb_import_folder*)
   
   ;; Initialize export panel
   (set_tile "export_single" "1")
@@ -562,11 +569,13 @@
   (action_tile "type_circuits" "(setq *ucb_content_type* \"circuits\") (ucb:type_changed)")
   
   (action_tile "library_folder" "(setq *ucb_library_folder* $value)")
+  (action_tile "import_folder" "(setq *ucb_import_folder* $value)")
   (action_tile "export_method" "(setq *ucb_export_method* (atoi $value))")
   (action_tile "import_method" "(setq *ucb_import_method* (atoi $value))")
   (action_tile "export_category" "(setq *ucb_category* (nth (atoi $value) *ucb_categories*))")
   
   (action_tile "btn_browse_folder" "(ucb:browse_folder)")
+  (action_tile "btn_browse_import_folder" "(ucb:browse_import_folder)")
   (action_tile "btn_refresh_list" "(ucb:refresh_library_list)")
   
   ;; Export name field
@@ -619,24 +628,34 @@
 (defun ucb:refresh_library_list ( / file_list)
   (start_list "import_list")
   
-  (setq file_list (ucb:get_library_files *ucb_content_type*))
+  (setq file_list (ucb:get_library_files *ucb_content_type* T))
   (mapcar '(lambda (item) 
              (add_list (strcat (car item) " [" (cadr item) "]"))) 
           file_list)
   
   (end_list)
   (set_tile "status_text" 
-    (strcat "Found " (itoa (length file_list)) " " *ucb_content_type* " in library")))
+    (strcat "Found " (itoa (length file_list)) " " *ucb_content_type* " in " *ucb_import_folder*)))
 
 (defun ucb:browse_folder ( / folder)
-  (setq folder (getfiled "Select Library Folder" *ucb_library_folder* "" 16))
+  (setq folder (getfiled "Select Export Library Folder" *ucb_library_folder* "" 16))
   (if folder
     (progn
       ;; If user selected a file, get its directory; if directory, use as-is
       (if (wcmatch folder "*.*")
         (setq *ucb_library_folder* (vl-filename-directory folder))
         (setq *ucb_library_folder* folder))
-      (set_tile "library_folder" *ucb_library_folder*)
+      (set_tile "library_folder" *ucb_library_folder*))))
+
+(defun ucb:browse_import_folder ( / folder)
+  (setq folder (getfiled "Select Import Library Folder" *ucb_import_folder* "" 16))
+  (if folder
+    (progn
+      ;; If user selected a file, get its directory; if directory, use as-is
+      (if (wcmatch folder "*.*")
+        (setq *ucb_import_folder* (vl-filename-directory folder))
+        (setq *ucb_import_folder* folder))
+      (set_tile "import_folder" *ucb_import_folder*)
       (ucb:refresh_library_list))))
 
 (defun ucb:browse_csv ( / csv_file csv_dir csv_data entry_count)
@@ -879,7 +898,7 @@
   (ucb:do_export_batch))
 
 (defun ucb:do_import ( / file_list item_data item_path insert_pt csv_path csv_data)
-  (setq file_list (ucb:get_library_files *ucb_content_type*))
+  (setq file_list (ucb:get_library_files *ucb_content_type* T))
   
   (if (and *ucb_import_selection* file_list)
     (progn

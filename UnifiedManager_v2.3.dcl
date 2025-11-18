@@ -156,6 +156,25 @@ ucbmanager : dialog {
     label = "▼ IMPORT Workflow";
     key = "import_panel";
     
+    : row {
+      : text {
+        label = "Import From:";
+        width = 10;
+      }
+      : edit_box {
+        key = "import_folder";
+        width = 27;
+      }
+      : button {
+        key = "btn_browse_import_folder";
+        label = "...";
+        width = 3;
+        fixed_width = true;
+      }
+    }
+    
+    : spacer { height = 0.2; }
+    
     : list_box {
       key = "import_list";
       height = 6;
