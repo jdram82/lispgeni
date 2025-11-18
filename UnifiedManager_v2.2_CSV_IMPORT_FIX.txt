@@ -1,0 +1,59 @@
+═══════════════════════════════════════════════════════════════════════════
+UNIFIED MANAGER v2.2 - CSV COORDINATE IMPORT FIX
+═══════════════════════════════════════════════════════════════════════════
+
+ISSUE FIXED:
+  Import was asking for manual insertion points instead of using CSV coordinates
+
+CHANGES MADE:
+  1. Added missing local variables (csv_path, csv_data) to ucb:do_import function
+  2. Fixed CSV reading in ucb:do_import (was calling with wrong parameters)
+  3. Fixed CSV reading in ucb:do_import_csv (removed header skip, already handled)
+  4. Both functions now correctly use BaseX, BaseY, BaseZ (columns 3,4,5) from CSV
+
+HOW IT WORKS NOW:
+  ─────────────────────────────────────────────────────────────────────────
+  SINGLE CIRCUIT IMPORT (from list):
+    1. Select circuit from import list
+    2. Click "▶ IMPORT" button
+    3. ✅ Automatically uses CSV coordinates (BaseX, BaseY, BaseZ)
+    4. ⚠️ If coordinates not found in CSV → asks for manual point
+  
+  BATCH CSV IMPORT:
+    1. Click "📄 CSV" to browse and select CSV file
+    2. Click "▶ IMPORT" button
+    3. ✅ Imports ALL circuits at their saved coordinates
+    4. Uses BaseX, BaseY, BaseZ for each entry
+
+CSV STRUCTURE:
+  CircuitName,Category,DWG_File,BaseX,BaseY,BaseZ,InsertX,InsertY,InsertZ,Date,Time
+  Example:
+  Motor_Circuit_01,Motor_Circuit,C:\Temp\...\Motor_Circuit_01.dwg,-150.05,-8.87,0.00,,,2025-11-17,12:30:45
+  
+  Column Index:
+    0 = CircuitName
+    1 = Category
+    2 = DWG_File (full path)
+    3 = BaseX    ← Used for import X coordinate
+    4 = BaseY    ← Used for import Y coordinate
+    5 = BaseZ    ← Used for import Z coordinate
+    6 = InsertX  (future use)
+    7 = InsertY  (future use)
+    8 = InsertZ  (future use)
+    9 = Export_Date
+   10 = Export_Time
+
+TESTING:
+  1. Load: (load "UnifiedManager_v2.2.lsp")
+  2. Run: UCB
+  3. Switch to CIRCUITS mode
+  4. EXPORT a circuit (it saves coordinates to CSV)
+  5. IMPORT the same circuit → should use saved coordinates automatically
+  6. No manual insertion point should be requested!
+
+COMMIT:
+  Git commit: 1ba4398
+  Branch: dev-macro
+  Message: "Fix CSV coordinate import - use BaseX/Y/Z automatically for circuits"
+
+═══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,24 @@
+UNIFIED MANAGER v2.2 - TROUBLESHOOTING
+
+If you get "Cannot load dialog 'ucbmanager'" error:
+
+1. Make sure BOTH files are in the SAME folder:
+   - UnifiedManager_v2.2.lsp
+   - UnifiedManager_v2.2.dcl
+
+2. In AutoCAD, check the file location:
+   Command: (findfile "UnifiedManager_v2.2.lsp")
+   Should return: "C:\Your\Path\UnifiedManager_v2.2.lsp"
+
+3. Check DCL file exists in same location:
+   Command: (findfile "UnifiedManager_v2.2.dcl")
+   Should return: "C:\Your\Path\UnifiedManager_v2.2.dcl"
+
+4. If files are in folder with spaces in name, make sure to load like this:
+   Command: (load "C:/Full/Path/To/UnifiedManager_v2.2.lsp")
+
+5. Try reloading:
+   Command: (load "UnifiedManager_v2.2.lsp")
+   Command: UCB
+
+If problem persists, the DCL file might be cached. Close and reopen AutoCAD.

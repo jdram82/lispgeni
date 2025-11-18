@@ -1,5 +1,5 @@
 ;; ═══════════════════════════════════════════════════════════════════════════
-;; UNIFIED CIRCUIT & BLOCK MANAGER v2.2
+;; UNIFIED CIRCUIT & BLOCK MANAGER v2.3
 ;; Complete solution: Block Definitions + Circuit Assemblies
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;;
@@ -12,7 +12,7 @@
 ;;   • Category-based organization
 ;;
 ;; USAGE:
-;;   (load "UnifiedManager_v2.2.lsp")
+;;   (load "UnifiedManager_v2.3.lsp")
 ;;   UCB  or  UNIFIEDMANAGER
 ;;
 ;; ═══════════════════════════════════════════════════════════════════════════
@@ -23,7 +23,7 @@
 
 ;; Store the path where this LSP was loaded from
 (if (not *ucb_lsp_path*)
-  (setq *ucb_lsp_path* (findfile "UnifiedManager_v2.2.lsp")))
+  (setq *ucb_lsp_path* (findfile "UnifiedManager_v2.3.lsp")))
 
 (if (not *ucb_operation_mode*) 
   (setq *ucb_operation_mode* "export"))  ; "export" or "import"
@@ -462,19 +462,19 @@
     (setq lsp_path (findfile "UnifiedManager_v2.2.lsp")))
   
   (if lsp_path
-    (setq dcl_path (strcat (vl-filename-directory lsp_path) "\\UnifiedManager_v2.2.dcl"))
+    (setq dcl_path (strcat (vl-filename-directory lsp_path) "\\UnifiedManager_v2.3.dcl"))
     (progn
       ;; Method 2: Try current drawing directory
       (setq dwg_path (getvar "DWGPREFIX"))
-      (setq dcl_path (strcat dwg_path "UnifiedManager_v2.2.dcl"))
+      (setq dcl_path (strcat dwg_path "UnifiedManager_v2.3.dcl"))
       
       (if (not (findfile dcl_path))
         (progn
           ;; Method 3: Try LOCALROOTPREFIX (user's local AutoCAD folder)
-          (setq dcl_path (strcat (getvar "LOCALROOTPREFIX") "UnifiedManager_v2.2.dcl"))
+          (setq dcl_path (strcat (getvar "LOCALROOTPREFIX") "UnifiedManager_v2.3.dcl"))
           (if (not (findfile dcl_path))
             ;; Method 4: Just the filename (AutoCAD will search support paths)
-            (setq dcl_path "UnifiedManager_v2.2.dcl"))))))
+            (setq dcl_path "UnifiedManager_v2.3.dcl"))))))
   dcl_path)
 
 (defun ucb:show_dialog ( / dcl_id dcl_path result continue)
@@ -982,7 +982,7 @@
 ;; ═══════════════════════════════════════════════════════════════════════════
 
 (princ "\n╔════════════════════════════════════════════════════════════════╗")
-(princ "\n║           UNIFIED CIRCUIT & BLOCK MANAGER v2.1                ║")
+(princ "\n║           UNIFIED CIRCUIT & BLOCK MANAGER v2.3                ║")
 (princ "\n╠════════════════════════════════════════════════════════════════╣")
 (princ "\n║  Commands:                                                     ║")
 (princ "\n║    UCB / UNIFIEDMANAGER - Open Unified Manager Dialog         ║")
