@@ -878,7 +878,7 @@
   (princ (strcat "\n  Exporting all " *ucb_content_type* " to category: " *ucb_category*))
   (ucb:do_export_batch))
 
-(defun ucb:do_import ( / file_list item_data item_path insert_pt)
+(defun ucb:do_import ( / file_list item_data item_path insert_pt csv_path csv_data)
   (setq file_list (ucb:get_library_files *ucb_content_type*))
   
   (if (and *ucb_import_selection* file_list)
@@ -898,10 +898,10 @@
           (setq insert_pt nil)
           
           (if (and (findfile csv_path)
-                   (setq csv_data (ucb:read_csv csv_path)))
+                   (setq csv_data (ucb:read_csv *ucb_content_type*)))
             (progn
               ;; Search for this circuit in CSV
-              (foreach entry (cdr csv_data)
+              (foreach entry csv_data
                 (if (and (not insert_pt)
                          (= (car entry) (car item_data))
                          (>= (length entry) 6))
@@ -942,7 +942,7 @@
       (princ (strcat "\n✗ CSV file not found: " csv_path)))
     
     (progn
-      (setq csv_data (ucb:read_csv csv_path))
+      (setq csv_data (ucb:read_csv *ucb_content_type*))
       (setq count 0)
       
       (if (= *ucb_content_type* "blocks")
@@ -952,7 +952,7 @@
         
         (progn
           (princ "\n→ BATCH IMPORT FROM CSV (Circuits)")
-          (foreach entry (cdr csv_data)  ; Skip header
+          (foreach entry csv_data
             (setq item_name (car entry))
             (setq item_path (caddr entry))
             
