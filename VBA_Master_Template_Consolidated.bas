@@ -2,8 +2,12 @@
 ' EXCEL VBA MASTER TEMPLATE - ALL MODULES CONSOLIDATED
 ' =============================================================================
 ' PROJECT: Excel-AutoCAD Block/Circuit Manager
-' VERSION: 3.1 - Production Ready
+' VERSION: 3.2 - 12-Column CSV Format (UnifiedManager Auto Compatible)
 ' DATE: November 19, 2025
+' =============================================================================
+' CSV FORMAT (12 columns):
+'   Sl.No, Block/Circuit Name, Category, DWG File Location, X Coordinate,
+'   Y Coordinate, Z Coordinate, Layer, Color, Linetype, Export Date, Export Time
 ' =============================================================================
 ' INSTALLATION: Import this entire file OR import individual modules below
 ' =============================================================================
@@ -133,15 +137,20 @@ ProcessLine:
         If line <> "" Then
             fields = ParseCSVLine(line)
             
-            If UBound(fields) >= 6 Then
-                wsMacroLibrary.Cells(row, 1).Value = serialNo
-                wsMacroLibrary.Cells(row, 2).Value = Trim(fields(0))
-                wsMacroLibrary.Cells(row, 3).Value = Trim(fields(1))
-                wsMacroLibrary.Cells(row, 4).Value = Trim(fields(2))
-                wsMacroLibrary.Cells(row, 5).Value = Trim(fields(3))
-                wsMacroLibrary.Cells(row, 6).Value = Trim(fields(4))
-                wsMacroLibrary.Cells(row, 7).Value = Trim(fields(5))
-                wsMacroLibrary.Cells(row, 8).Value = Trim(fields(6))
+            ' Expect 11 fields from CSV (12 columns - Sl.No)
+            If UBound(fields) >= 10 Then
+                wsMacroLibrary.Cells(row, 1).Value = serialNo                ' Sl.No
+                wsMacroLibrary.Cells(row, 2).Value = Trim(fields(0))        ' Block/Circuit Name
+                wsMacroLibrary.Cells(row, 3).Value = Trim(fields(1))        ' Category
+                wsMacroLibrary.Cells(row, 4).Value = Trim(fields(2))        ' DWG File Location
+                wsMacroLibrary.Cells(row, 5).Value = Trim(fields(3))        ' X Coordinate
+                wsMacroLibrary.Cells(row, 6).Value = Trim(fields(4))        ' Y Coordinate
+                wsMacroLibrary.Cells(row, 7).Value = Trim(fields(5))        ' Z Coordinate
+                wsMacroLibrary.Cells(row, 8).Value = Trim(fields(6))        ' Layer
+                wsMacroLibrary.Cells(row, 9).Value = Trim(fields(7))        ' Color
+                wsMacroLibrary.Cells(row, 10).Value = Trim(fields(8))       ' Linetype
+                wsMacroLibrary.Cells(row, 11).Value = Trim(fields(9))       ' Export Date
+                wsMacroLibrary.Cells(row, 12).Value = Trim(fields(10))      ' Export Time
                 
                 row = row + 1
                 serialNo = serialNo + 1
@@ -221,7 +230,7 @@ Sub ExportSelectedMacrosToProjectCSV(csvPath As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set csvFile = fso.CreateTextFile(csvPath, True)
     
-    csvFile.WriteLine "Block Name,X Coordinate,Y Coordinate,Z Coordinate,Layer,Color,Linetype"
+    csvFile.WriteLine "Block/Circuit Name,Category,DWG File Location,X Coordinate,Y Coordinate,Z Coordinate,Layer,Color,Linetype,Export Date,Export Time"
     
     For row = 2 To lastRow
         If Trim(wsSelectedMacros.Cells(row, 2).Value) <> "" Then
@@ -231,7 +240,11 @@ Sub ExportSelectedMacrosToProjectCSV(csvPath As String)
                       wsSelectedMacros.Cells(row, 5).Value & "," & _
                       wsSelectedMacros.Cells(row, 6).Value & "," & _
                       wsSelectedMacros.Cells(row, 7).Value & "," & _
-                      wsSelectedMacros.Cells(row, 8).Value
+                      wsSelectedMacros.Cells(row, 8).Value & "," & _
+                      wsSelectedMacros.Cells(row, 9).Value & "," & _
+                      wsSelectedMacros.Cells(row, 10).Value & "," & _
+                      wsSelectedMacros.Cells(row, 11).Value & "," & _
+                      wsSelectedMacros.Cells(row, 12).Value
             
             csvFile.WriteLine csvLine
         End If
@@ -281,38 +294,66 @@ End Sub
 Sub SetupMacroLibraryHeaders()
     With wsMacroLibrary
         .Range("A1").Value = "Sl.No"
-        .Range("B1").Value = "Block Name"
-        .Range("C1").Value = "X Coordinate"
-        .Range("D1").Value = "Y Coordinate"
-        .Range("E1").Value = "Z Coordinate"
-        .Range("F1").Value = "Layer"
-        .Range("G1").Value = "Color"
-        .Range("H1").Value = "Linetype"
+        .Range("B1").Value = "Block/Circuit Name"
+        .Range("C1").Value = "Category"
+        .Range("D1").Value = "DWG File Location"
+        .Range("E1").Value = "X Coordinate"
+        .Range("F1").Value = "Y Coordinate"
+        .Range("G1").Value = "Z Coordinate"
+        .Range("H1").Value = "Layer"
+        .Range("I1").Value = "Color"
+        .Range("J1").Value = "Linetype"
+        .Range("K1").Value = "Export Date"
+        .Range("L1").Value = "Export Time"
         
-        With .Range("A1:H1")
+        With .Range("A1:L1")
             .Font.Bold = True
-            .Interior.Color = RGB(150, 150, 150)
+            .Interior.Color = RGB(68, 114, 196)
             .Font.Color = RGB(255, 255, 255)
+            .HorizontalAlignment = xlCenter
         End With
+        
+        .Columns("A:A").ColumnWidth = 8
+        .Columns("B:B").ColumnWidth = 25
+        .Columns("C:C").ColumnWidth = 20
+        .Columns("D:D").ColumnWidth = 50
+        .Columns("E:G").ColumnWidth = 12
+        .Columns("H:H").ColumnWidth = 15
+        .Columns("I:J").ColumnWidth = 12
+        .Columns("K:L").ColumnWidth = 18
     End With
 End Sub
 
 Sub SetupSelectedMacrosHeaders()
     With wsSelectedMacros
         .Range("A1").Value = "Sl.No"
-        .Range("B1").Value = "Block Name"
-        .Range("C1").Value = "X Coordinate"
-        .Range("D1").Value = "Y Coordinate"
-        .Range("E1").Value = "Z Coordinate"
-        .Range("F1").Value = "Layer"
-        .Range("G1").Value = "Color"
-        .Range("H1").Value = "Linetype"
+        .Range("B1").Value = "Block/Circuit Name"
+        .Range("C1").Value = "Category"
+        .Range("D1").Value = "DWG File Location"
+        .Range("E1").Value = "X Coordinate"
+        .Range("F1").Value = "Y Coordinate"
+        .Range("G1").Value = "Z Coordinate"
+        .Range("H1").Value = "Layer"
+        .Range("I1").Value = "Color"
+        .Range("J1").Value = "Linetype"
+        .Range("K1").Value = "Export Date"
+        .Range("L1").Value = "Export Time"
         
-        With .Range("A1:H1")
+        With .Range("A1:L1")
             .Font.Bold = True
             .Interior.Color = RGB(100, 200, 100)
             .Font.Color = RGB(255, 255, 255)
+            .HorizontalAlignment = xlCenter
         End With
+        
+        .Columns("A:A").ColumnWidth = 8
+        .Columns("B:B").ColumnWidth = 25
+        .Columns("C:C").ColumnWidth = 20
+        .Columns("D:D").ColumnWidth = 50
+        .Columns("E:G").ColumnWidth = 12
+        .Columns("H:H").ColumnWidth = 15
+        .Columns("I:J").ColumnWidth = 12
+        .Columns("K:L").ColumnWidth = 18
     End With
 End Sub
 

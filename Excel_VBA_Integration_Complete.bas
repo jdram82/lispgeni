@@ -95,19 +95,19 @@ Sub ImportMacrosFromCSV_Click()
         If Trim(line) <> "" Then
             fields = Split(line, ",")
             
-            ' Map UnifiedManager CSV to Excel columns
-            ' CSV: CircuitName,Category,DWG_File,BaseX,BaseY,BaseZ,InsertX,InsertY,InsertZ,Export_Date,Export_Time
+            ' Map UnifiedManager Auto CSV to Excel columns (12 columns)
+            ' CSV: Block/Circuit Name,Category,DWG File,X,Y,Z,Layer,Color,Linetype,Export_Date,Export_Time
             If UBound(fields) >= 10 Then
-                wsMacroLibrary.Cells(row, 1).Value = recordCount + 1       ' Sl.No
+                wsMacroLibrary.Cells(row, 1).Value = recordCount + 1       ' Sl.No (Auto-generated)
                 wsMacroLibrary.Cells(row, 2).Value = Trim(fields(0))       ' Block/Circuit Name
                 wsMacroLibrary.Cells(row, 3).Value = Trim(fields(1))       ' Category
-                wsMacroLibrary.Cells(row, 4).Value = Trim(fields(2))       ' DWG File Path
-                wsMacroLibrary.Cells(row, 5).Value = CDbl(fields(3))       ' X Coordinate (BaseX)
-                wsMacroLibrary.Cells(row, 6).Value = CDbl(fields(4))       ' Y Coordinate (BaseY)
-                wsMacroLibrary.Cells(row, 7).Value = CDbl(fields(5))       ' Z Coordinate (BaseZ)
-                wsMacroLibrary.Cells(row, 8).Value = Trim(fields(2))       ' Layer (use category)
-                wsMacroLibrary.Cells(row, 9).Value = "ByLayer"             ' Color
-                wsMacroLibrary.Cells(row, 10).Value = "ByLayer"            ' Linetype
+                wsMacroLibrary.Cells(row, 4).Value = Trim(fields(2))       ' DWG File Location
+                wsMacroLibrary.Cells(row, 5).Value = CDbl(fields(3))       ' X Coordinate
+                wsMacroLibrary.Cells(row, 6).Value = CDbl(fields(4))       ' Y Coordinate
+                wsMacroLibrary.Cells(row, 7).Value = CDbl(fields(5))       ' Z Coordinate
+                wsMacroLibrary.Cells(row, 8).Value = Trim(fields(6))       ' Layer
+                wsMacroLibrary.Cells(row, 9).Value = Trim(fields(7))       ' Color
+                wsMacroLibrary.Cells(row, 10).Value = Trim(fields(8))      ' Linetype
                 wsMacroLibrary.Cells(row, 11).Value = Trim(fields(9))      ' Export Date
                 wsMacroLibrary.Cells(row, 12).Value = Trim(fields(10))     ' Export Time
                 
@@ -261,16 +261,16 @@ Sub ExportSelectedMacrosToCSV(csvPath As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set csvFile = fso.CreateTextFile(csvPath, True)
     
-    ' Write header (UnifiedManager import format)
-    csvFile.WriteLine "CircuitName,Category,DWG_File,BaseX,BaseY,BaseZ,InsertX,InsertY,InsertZ,Export_Date,Export_Time"
+    ' Write header (UnifiedManager Auto import format - 12 columns)
+    csvFile.WriteLine "Block/Circuit Name,Category,DWG File Location,X Coordinate,Y Coordinate,Z Coordinate,Layer,Color,Linetype,Export Date,Export Time"
     
     ' Get last row with data
     lastRow = wsSelectedMacros.Cells(wsSelectedMacros.Rows.Count, 2).End(xlUp).row
     
-    ' Write data rows
+    ' Write data rows - 12 columns matching UnifiedManager Auto format
     For row = 2 To lastRow
         If Trim(wsSelectedMacros.Cells(row, 2).Value) <> "" Then
-            ' Build CSV line
+            ' Build CSV line: Block/Circuit Name,Category,DWG File,X,Y,Z,Layer,Color,Linetype,Export_Date,Export_Time
             csvLine = _
                 wsSelectedMacros.Cells(row, 2).Value & "," & _
                 wsSelectedMacros.Cells(row, 3).Value & "," & _
@@ -278,9 +278,9 @@ Sub ExportSelectedMacrosToCSV(csvPath As String)
                 wsSelectedMacros.Cells(row, 5).Value & "," & _
                 wsSelectedMacros.Cells(row, 6).Value & "," & _
                 wsSelectedMacros.Cells(row, 7).Value & "," & _
-                wsSelectedMacros.Cells(row, 5).Value & "," & _
-                wsSelectedMacros.Cells(row, 6).Value & "," & _
-                wsSelectedMacros.Cells(row, 7).Value & "," & _
+                wsSelectedMacros.Cells(row, 8).Value & "," & _
+                wsSelectedMacros.Cells(row, 9).Value & "," & _
+                wsSelectedMacros.Cells(row, 10).Value & "," & _
                 wsSelectedMacros.Cells(row, 11).Value & "," & _
                 wsSelectedMacros.Cells(row, 12).Value
             
@@ -379,7 +379,7 @@ End Sub
 ' ============================================================================
 
 Sub SetupMacroLibraryHeaders()
-    'Set up headers for Macro Library (UnifiedManager format)
+    'Set up headers for Macro Library - 12 Column Format (UnifiedManager Auto)
     With wsMacroLibrary
         .Range("A1").Value = "Sl.No"
         .Range("B1").Value = "Block/Circuit Name"
@@ -402,17 +402,32 @@ Sub SetupMacroLibraryHeaders()
             .HorizontalAlignment = xlCenter
         End With
         
-        .Columns("A:L").AutoFit
+        ' Set column widths
+        .Columns("A:A").ColumnWidth = 8
+        .Columns("B:B").ColumnWidth = 25
+        .Columns("C:C").ColumnWidth = 20
+        .Columns("D:D").ColumnWidth = 50
+        .Columns("E:G").ColumnWidth = 12
+        .Columns("H:H").ColumnWidth = 15
+        .Columns("I:J").ColumnWidth = 12
+        .Columns("K:L").ColumnWidth = 18
     End With
 End Sub
 
 Sub FormatMacroLibraryData()
-    'Format Macro Library data
+    'Format Macro Library data - 12 column format
     With wsMacroLibrary
-        .Columns("E:G").NumberFormat = "0.0000"  ' Coordinates
+        .Columns("E:G").NumberFormat = "0.0000"  ' X, Y, Z Coordinates (4 decimal places)
         .Columns.AutoFit
         
-        ' Freeze panes
+        ' Add borders
+        Dim lastRow As Long
+        lastRow = .Cells(.Rows.Count, 1).End(xlUp).row
+        If lastRow > 1 Then
+            .Range("A1:L" & lastRow).Borders.LineStyle = xlContinuous
+        End If
+        
+        ' Freeze panes at row 2
         .Range("A2").Select
         ActiveWindow.FreezePanes = True
     End With
