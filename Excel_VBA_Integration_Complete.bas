@@ -201,8 +201,8 @@ Sub GenerateDrawings_Click()
         Exit Sub
     End If
     
-    ' Check if macros are selected
-    selectedCount = wsSelectedMacros.Cells(wsSelectedMacros.Rows.Count, 1).End(xlUp).row - 1
+    ' Check if macros are selected (check column B - Block/Circuit Name)
+    selectedCount = wsSelectedMacros.Cells(wsSelectedMacros.Rows.Count, 2).End(xlUp).row - 1
     If selectedCount <= 0 Then
         MsgBox "❌ No macros in Selected Macros sheet!" & vbCrLf & vbCrLf & _
                "Please ensure your filter formulas populate Selected Macros.", _
