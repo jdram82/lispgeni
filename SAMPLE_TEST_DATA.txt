@@ -1,0 +1,113 @@
+# Sample CSV Data for Testing
+# Use this to test the Excel VBA import functionality
+
+# ============================================================================
+# FILE 1: Sample_Circuits_Export.csv
+# ============================================================================
+# Format: CircuitName,Category,DWG_File,BaseX,BaseY,BaseZ,InsertX,InsertY,InsertZ,Export_Date,Export_Time
+
+CircuitName,Category,DWG_File,BaseX,BaseY,BaseZ,InsertX,InsertY,InsertZ,Export_Date,Export_Time
+PowerPanel_MCC01,Control_Panel,C:\Blocks\PowerPanel_MCC01.dwg,100.0000,200.0000,0.0000,100.0000,200.0000,0.0000,2025-11-18,14:30:15
+MotorStarter_M01,Motor_Circuit,C:\Blocks\MotorStarter_M01.dwg,150.5000,250.3000,0.0000,150.5000,250.3000,0.0000,2025-11-18,14:31:20
+MotorStarter_M02,Motor_Circuit,C:\Blocks\MotorStarter_M02.dwg,150.5000,300.3000,0.0000,150.5000,300.3000,0.0000,2025-11-18,14:32:10
+VFD_Drive_01,Power_Distribution,C:\Blocks\VFD_Drive_01.dwg,200.7500,180.4000,0.0000,200.7500,180.4000,0.0000,2025-11-18,14:33:45
+Transformer_T01,Power_Distribution,C:\Blocks\Transformer_T01.dwg,50.2000,150.6000,0.0000,50.2000,150.6000,0.0000,2025-11-18,14:35:00
+LightingPanel_LP01,Lighting_Circuit,C:\Blocks\LightingPanel_LP01.dwg,300.0000,100.0000,0.0000,300.0000,100.0000,0.0000,2025-11-18,14:36:30
+PLC_Module_01,Instrumentation,C:\Blocks\PLC_Module_01.dwg,400.5000,250.0000,0.0000,400.5000,250.0000,0.0000,2025-11-18,14:38:00
+HMI_Display_01,Instrumentation,C:\Blocks\HMI_Display_01.dwg,450.0000,250.0000,0.0000,450.0000,250.0000,0.0000,2025-11-18,14:39:15
+EmergencyStop_ES01,Safety_System,C:\Blocks\EmergencyStop_ES01.dwg,100.0000,50.0000,0.0000,100.0000,50.0000,0.0000,2025-11-18,14:40:20
+FireAlarm_FA01,Safety_System,C:\Blocks\FireAlarm_FA01.dwg,500.0000,50.0000,0.0000,500.0000,50.0000,0.0000,2025-11-18,14:41:30
+ControlRelay_CR01,Control_Panel,C:\Blocks\ControlRelay_CR01.dwg,125.0000,225.0000,0.0000,125.0000,225.0000,0.0000,2025-11-18,14:42:45
+ControlRelay_CR02,Control_Panel,C:\Blocks\ControlRelay_CR02.dwg,125.0000,275.0000,0.0000,125.0000,275.0000,0.0000,2025-11-18,14:43:50
+Contactor_K01,Motor_Circuit,C:\Blocks\Contactor_K01.dwg,175.0000,250.0000,0.0000,175.0000,250.0000,0.0000,2025-11-18,14:45:00
+Contactor_K02,Motor_Circuit,C:\Blocks\Contactor_K02.dwg,175.0000,300.0000,0.0000,175.0000,300.0000,0.0000,2025-11-18,14:46:10
+CircuitBreaker_CB01,Power_Distribution,C:\Blocks\CircuitBreaker_CB01.dwg,75.0000,175.0000,0.0000,75.0000,175.0000,0.0000,2025-11-18,14:47:20
+CircuitBreaker_CB02,Power_Distribution,C:\Blocks\CircuitBreaker_CB02.dwg,75.0000,200.0000,0.0000,75.0000,200.0000,0.0000,2025-11-18,14:48:30
+Disconnect_DS01,Power_Distribution,C:\Blocks\Disconnect_DS01.dwg,25.0000,150.0000,0.0000,25.0000,150.0000,0.0000,2025-11-18,14:49:40
+PushButton_PB01,Control_Panel,C:\Blocks\PushButton_PB01.dwg,110.0000,210.0000,0.0000,110.0000,210.0000,0.0000,2025-11-18,14:50:50
+Indicator_Light_01,Control_Panel,C:\Blocks\Indicator_Light_01.dwg,140.0000,210.0000,0.0000,140.0000,210.0000,0.0000,2025-11-18,14:52:00
+Sensor_Temp_01,Instrumentation,C:\Blocks\Sensor_Temp_01.dwg,425.0000,275.0000,0.0000,425.0000,275.0000,0.0000,2025-11-18,14:53:10
+
+# ============================================================================
+# TESTING INSTRUCTIONS:
+# ============================================================================
+# 1. Copy the above data (excluding comments) to a text file
+# 2. Save as: Sample_Circuits_Export.csv
+# 3. In Excel VBA:
+#    - Go to Macro Library tab
+#    - Click "Import from CSV"
+#    - Browse to Sample_Circuits_Export.csv
+# 4. Verify 20 records imported
+# 5. Test filtering by category (e.g., "Motor_Circuit" = 4 records)
+
+# ============================================================================
+# EXPECTED RESULTS:
+# ============================================================================
+# Total Records: 20
+# Categories:
+#   - Control_Panel: 5
+#   - Motor_Circuit: 4
+#   - Power_Distribution: 5
+#   - Lighting_Circuit: 1
+#   - Instrumentation: 3
+#   - Safety_System: 2
+
+# ============================================================================
+# FILTER TEST CASES:
+# ============================================================================
+# Test 1: Filter by Category = "Motor_Circuit"
+#   Expected: 4 macros (MotorStarter_M01, M02, Contactor_K01, K02)
+#
+# Test 2: Filter by Category = "Control_Panel"
+#   Expected: 5 macros (PowerPanel, 2x ControlRelay, PushButton, Indicator)
+#
+# Test 3: Filter by Category = "Instrumentation"
+#   Expected: 3 macros (PLC_Module, HMI_Display, Sensor_Temp)
+#
+# Test 4: Filter by X Coordinate > 200
+#   Expected: 7 macros
+#
+# Test 5: Export Date = "2025-11-18"
+#   Expected: All 20 macros
+
+# ============================================================================
+# COORDINATE LAYOUT (Visual Reference):
+# ============================================================================
+#
+#     0         100       200       300       400       500
+#   0 ┌─────────┬─────────┬─────────┬─────────┬─────────┐
+#     │         │         │         │         │         │
+#  50 │     ES01│         │         │         │     FA01│
+#     │         │         │         │         │         │
+# 100 │         │         │         │    LP01 │         │
+#     │         │         │         │         │         │
+# 150 │  DS01   │         │         │         │         │
+#     │     T01 │         │  VFD01  │         │         │
+# 200 │         │   MCC01 │         │         │         │
+#     │         │   PB01  │         │         │         │
+# 250 │         │   CR01  │   M01   │         │   PLC01 │
+#     │         │   IL01  │   K01   │         │   HMI01 │
+# 300 │         │   CR02  │   M02   │         │   TEMP01│
+#     │         │         │   K02   │         │         │
+#     └─────────┴─────────┴─────────┴─────────┴─────────┘
+#
+# Legend:
+#   MCC01  = PowerPanel_MCC01 (Control_Panel)
+#   M01/02 = MotorStarter (Motor_Circuit)
+#   K01/02 = Contactor (Motor_Circuit)
+#   VFD01  = VFD_Drive (Power_Distribution)
+#   T01    = Transformer (Power_Distribution)
+#   LP01   = LightingPanel (Lighting_Circuit)
+#   PLC01  = PLC_Module (Instrumentation)
+#   HMI01  = HMI_Display (Instrumentation)
+#   ES01   = EmergencyStop (Safety_System)
+#   FA01   = FireAlarm (Safety_System)
+#   CR01/02= ControlRelay (Control_Panel)
+#   PB01   = PushButton (Control_Panel)
+#   IL01   = Indicator_Light (Control_Panel)
+#   TEMP01 = Sensor_Temp (Instrumentation)
+#   DS01   = Disconnect (Power_Distribution)
+
+# ============================================================================
+# END OF SAMPLE DATA
+# ============================================================================
