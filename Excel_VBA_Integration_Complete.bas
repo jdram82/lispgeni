@@ -511,11 +511,11 @@ Function GetSettingValue(settingName As String) As String
     
     Select Case settingName
         Case "ProjectName"
-            GetSettingValue = wsSettings.Range("B4").Value
+            GetSettingValue = wsSettings.Range("B2").Value
         Case "ExportPath"
-            GetSettingValue = wsSettings.Range("B6").Value
+            GetSettingValue = wsSettings.Range("B4").Value
         Case "CSVFilesPath"
-            GetSettingValue = wsSettings.Range("B8").Value
+            GetSettingValue = wsSettings.Range("B6").Value
         Case Else
             GetSettingValue = ""
     End Select
