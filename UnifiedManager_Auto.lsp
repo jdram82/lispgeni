@@ -1242,3 +1242,100 @@
 (princ "\n╚════════════════════════════════════════════════════════════════╝")
 (princ "\n")
 
+;; ═══════════════════════════════════════════════════════════════════════════
+;; AUTO-IMPORT FUNCTION FOR EXCEL VBA INTEGRATION
+;; ═══════════════════════════════════════════════════════════════════════════
+;; This function is called automatically by Excel VBA after Generate Drawings
+;; to import blocks directly from CSV without manual dialog interaction
+
+(defun ucb:auto-import-csv (csv_path / file line fields block_name x y z dwg_path inserted_count)
+  (setq inserted_count 0)
+  
+  (if (and csv_path (findfile csv_path))
+    (progn
+      (princ (strcat "\n╔═══════════════════════════════════════════════════════════════╗"))
+      (princ (strcat "\n║  AUTO-IMPORT FROM EXCEL VBA                                 ║"))
+      (princ (strcat "\n╚═══════════════════════════════════════════════════════════════╝"))
+      (princ (strcat "\nReading CSV: " csv_path))
+      
+      (setq file (open csv_path "r"))
+      
+      (if file
+        (progn
+          ;; Skip header line
+          (read-line file)
+          
+          ;; Read and process each line
+          (while (setq line (read-line file))
+            (if (> (strlen line) 0)
+              (progn
+                (setq fields (ucb:parse-csv-line line))
+                
+                (if (>= (length fields) 11)
+                  (progn
+                    (setq block_name (nth 0 fields))
+                    (setq dwg_path (nth 2 fields))
+                    (setq x (atof (nth 3 fields)))
+                    (setq y (atof (nth 4 fields)))
+                    (setq z (atof (nth 5 fields)))
+                    
+                    (princ (strcat "\nInserting: " block_name " at (" 
+                                   (rtos x 2 4) ", " (rtos y 2 4) ", " (rtos z 2 4) ")"))
+                    
+                    ;; Insert block at coordinates
+                    (if (and dwg_path (findfile dwg_path))
+                      (progn
+                        (command "._INSERT" dwg_path (list x y z) 1.0 1.0 0.0)
+                        (setq inserted_count (1+ inserted_count)))
+                      (princ (strcat "\n  WARNING: Block file not found: " dwg_path)))
+                  )
+                )
+              )
+            )
+          )
+          
+          (close file)
+          (princ (strcat "\n\n✓ AUTO-IMPORT COMPLETE!"))
+          (princ (strcat "\n  Inserted " (itoa inserted_count) " blocks from CSV."))
+          (princ "\n")
+        )
+        (princ (strcat "\nERROR: Could not open CSV file: " csv_path))
+      )
+    )
+    (princ (strcat "\nERROR: CSV file not found: " csv_path))
+  )
+  
+  (princ)
+)
+
+;; Helper function to parse CSV line (handles comma-separated values)
+(defun ucb:parse-csv-line (line / fields current_field in_quotes char_pos char)
+  (setq fields '()
+        current_field ""
+        in_quotes nil
+        char_pos 0)
+  
+  (while (< char_pos (strlen line))
+    (setq char (substr line (1+ char_pos) 1))
+    
+    (cond
+      ((and (= char ",") (not in_quotes))
+       (setq fields (append fields (list current_field)))
+       (setq current_field ""))
+      
+      ((= char "\"")
+       (setq in_quotes (not in_quotes)))
+      
+      (t
+       (setq current_field (strcat current_field char)))
+    )
+    
+    (setq char_pos (1+ char_pos))
+  )
+  
+  ;; Add last field
+  (setq fields (append fields (list current_field)))
+  
+  fields
+)
+

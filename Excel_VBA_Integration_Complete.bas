@@ -372,16 +372,32 @@ Sub LaunchAutoCADWithPrompt(csvFilePath As String)
                 Call LogAction("LaunchAutoCAD", "SUCCESS", _
                     "Opened drawing: " & targetDwg)
                 
+                ' Wait for drawing to fully load
+                Application.Wait (Now + TimeValue("0:00:02"))
+                
+                ' Auto-execute UnifiedManager import with CSV file
+                On Error Resume Next
+                Dim doc As Object
+                Set doc = acadApp.ActiveDocument
+                
+                If Not (doc Is Nothing) Then
+                    ' Send commands to AutoCAD to load LSP and import CSV automatically
+                    ' Load the UnifiedManager_Auto.lsp if not already loaded
+                    doc.SendCommand "(load " & Chr(34) & "UnifiedManager_Auto.lsp" & Chr(34) & ") "
+                    Application.Wait (Now + TimeValue("0:00:01"))
+                    
+                    ' Call the auto-import function with CSV path
+                    ' Note: This requires the LSP to have an auto-import function
+                    doc.SendCommand "(ucb:auto-import-csv " & Chr(34) & csvFilePath & Chr(34) & ") "
+                End If
+                On Error GoTo 0
+                
                 MsgBox "✓ AutoCAD is ready!" & vbCrLf & vbCrLf & _
                        "📂 Drawing: " & targetDwg & vbCrLf & _
                        "📄 CSV File: " & csvFilePath & vbCrLf & vbCrLf & _
-                       "🔧 Next Steps in AutoCAD:" & vbCrLf & _
-                       "   1. Type: UCB  or  UNIFIEDMANAGER" & vbCrLf & _
-                       "   2. Click 'Import' mode" & vbCrLf & _
-                       "   3. Select 'Circuits' content type" & vbCrLf & _
-                       "   4. Browse for CSV: " & vbCrLf & _
-                       "      " & csvFilePath & vbCrLf & _
-                       "   5. Macros will be placed at exact coordinates!", _
+                       "⚡ AUTO-IMPORT INITIATED!" & vbCrLf & _
+                       "Blocks will be automatically imported at coordinates!" & vbCrLf & vbCrLf & _
+                       "Note: Ensure UnifiedManager_Auto.lsp is in AutoCAD's support path.", _
                        vbInformation, "AutoCAD Ready"
             Else
                 MsgBox "⚠ No drawing selected." & vbCrLf & vbCrLf & _
