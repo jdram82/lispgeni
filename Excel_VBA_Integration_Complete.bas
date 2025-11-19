@@ -382,13 +382,32 @@ Sub LaunchAutoCADWithPrompt(csvFilePath As String)
                 
                 If Not (doc Is Nothing) Then
                     ' Send commands to AutoCAD to load LSP and import CSV automatically
-                    ' Load the UnifiedManager_Auto.lsp if not already loaded
-                    doc.SendCommand "(load " & Chr(34) & "UnifiedManager_Auto.lsp" & Chr(34) & ") "
+                    Dim lspPath As String
+                    
+                    ' Try to find LSP file in common locations
+                    lspPath = Environ("APPDATA") & "\Autodesk\AutoCAD 2024\R24.3\enu\Support\UnifiedManager_Auto.lsp"
+                    
+                    If Dir(lspPath) = "" Then
+                        ' Try alternate paths
+                        lspPath = "C:\AutoLISP\UnifiedManager_Auto.lsp"
+                        If Dir(lspPath) = "" Then
+                            ' Try same folder as drawing
+                            lspPath = Left(targetDwg, InStrRev(targetDwg, "\")) & "UnifiedManager_Auto.lsp"
+                            If Dir(lspPath) = "" Then
+                                ' Use generic name and let AutoCAD search
+                                lspPath = "UnifiedManager_Auto.lsp"
+                            End If
+                        End If
+                    End If
+                    
+                    ' Load the LSP with findfile to search support paths
+                    doc.SendCommand "(load (findfile " & Chr(34) & "UnifiedManager_Auto.lsp" & Chr(34) & ")) "
                     Application.Wait (Now + TimeValue("0:00:01"))
                     
-                    ' Call the auto-import function with CSV path
-                    ' Note: This requires the LSP to have an auto-import function
-                    doc.SendCommand "(ucb:auto-import-csv " & Chr(34) & csvFilePath & Chr(34) & ") "
+                    ' Call the auto-import function with CSV path (convert backslashes for AutoLISP)
+                    Dim lispCsvPath As String
+                    lispCsvPath = Replace(csvFilePath, "\", "\\")
+                    doc.SendCommand "(ucb:auto-import-csv " & Chr(34) & lispCsvPath & Chr(34) & ") "
                 End If
                 On Error GoTo 0
                 
