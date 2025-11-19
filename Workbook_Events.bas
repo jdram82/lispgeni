@@ -5,19 +5,19 @@
 ' Add this to ThisWorkbook module
 
 Private Sub Workbook_Open()
-    'Automatically setup headers when workbook opens
+    'Automatically initialize and setup headers when workbook opens
     
     On Error Resume Next
     
-    ' Check if headers already exist
+    ' Initialize worksheet references first
+    Call InitializeWorksheets
+    
+    ' Check if headers already exist in Macro Library
     If wsMacroLibrary.Range("A1").Value = "" Then
         Call SetupMacroLibraryHeaders
     End If
     
-    If wsAvailableMacros.Range("A1").Value = "" Then
-        Call SetupAvailableMacrosHeaders
-    End If
-    
+    ' Check if headers exist in Selected Macros
     If wsSelectedMacros.Range("A1").Value = "" Then
         Call SetupSelectedMacrosHeaders
     End If

@@ -1,17 +1,10 @@
 ' ============================================================================
-' GLOBAL VARIABLE DECLARATIONS - MUST BE AT THE TOP
+' TESTING FUNCTIONS MODULE
 ' ============================================================================
+' NOTE: Global variables are declared in Excel_VBA_Integration_Complete module
+' This module uses those global references
 
 Option Explicit
-
-' Global worksheet references - MUST be declared at module level
-Public wsMacroLibrary As Worksheet
-Public wsProjectConfig As Worksheet
-Public wsAvailableMacros As Worksheet
-Public wsSelectedMacros As Worksheet
-Public wsDashboard As Worksheet
-Public wsLogs As Worksheet
-Public wsSettings As Worksheet
 
 ' ============================================================================
 ' WORKSHEET INITIALIZATION FUNCTION

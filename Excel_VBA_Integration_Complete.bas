@@ -31,7 +31,7 @@ Sub InitializeWorksheets()
     
     Set wsMacroLibrary = ThisWorkbook.Sheets("Macro Library")
     Set wsSelectedMacros = ThisWorkbook.Sheets("Selected Macros")
-    Set wsProjectConfig = ThisWorkbook.Sheets("Project_Config")
+    Set wsProjectConfig = ThisWorkbook.Sheets("Project Config")
     Set wsSettings = ThisWorkbook.Sheets("Settings")
     Set wsLogs = ThisWorkbook.Sheets("Logs")
     
@@ -84,12 +84,37 @@ Sub ImportMacrosFromCSV_Click()
     row = 2  ' Start after header
     recordCount = 0
     
-    ' Skip header line
+    ' Skip header line if exists
     If Not csvFile.AtEndOfStream Then
         line = csvFile.ReadLine
+        ' Check if this is actually a header (contains "Block" or "Circuit")
+        If Not (InStr(1, line, "Block", vbTextCompare) > 0 Or _
+                InStr(1, line, "Circuit", vbTextCompare) > 0 Or _
+                InStr(1, line, "Category", vbTextCompare) > 0) Then
+            ' Not a header, process this line as data
+            If Trim(line) <> "" Then
+                fields = Split(line, ",")
+                If UBound(fields) >= 10 Then
+                    wsMacroLibrary.Cells(row, 1).Value = recordCount + 1
+                    wsMacroLibrary.Cells(row, 2).Value = Trim(fields(0))
+                    wsMacroLibrary.Cells(row, 3).Value = Trim(fields(1))
+                    wsMacroLibrary.Cells(row, 4).Value = Trim(fields(2))
+                    wsMacroLibrary.Cells(row, 5).Value = CDbl(fields(3))
+                    wsMacroLibrary.Cells(row, 6).Value = CDbl(fields(4))
+                    wsMacroLibrary.Cells(row, 7).Value = CDbl(fields(5))
+                    wsMacroLibrary.Cells(row, 8).Value = Trim(fields(6))
+                    wsMacroLibrary.Cells(row, 9).Value = Trim(fields(7))
+                    wsMacroLibrary.Cells(row, 10).Value = Trim(fields(8))
+                    wsMacroLibrary.Cells(row, 11).Value = Trim(fields(9))
+                    wsMacroLibrary.Cells(row, 12).Value = Trim(fields(10))
+                    row = row + 1
+                    recordCount = recordCount + 1
+                End If
+            End If
+        End If
     End If
     
-    ' Read data lines
+    ' Read remaining data lines
     Do While Not csvFile.AtEndOfStream
         line = csvFile.ReadLine
         If Trim(line) <> "" Then
@@ -644,3 +669,90 @@ ErrorHandler:
     MsgBox "Error selecting folder: " & Err.Description, vbExclamation
     BrowseForFolder = ""
 End Function
+
+' ============================================================================
+' SETTINGS SHEET BUTTON FUNCTIONS
+' ============================================================================
+
+Sub ChooseExportPath_Click()
+    'Browse for Export folder path
+    Dim folderPath As String
+    
+    folderPath = BrowseForFolder("Select Export Folder")
+    
+    If folderPath <> "" Then
+        wsSettings.Range("B3").Value = folderPath
+        Call LogAction("ChooseExportPath", "SUCCESS", "Export path: " & folderPath)
+    End If
+End Sub
+
+Sub ChooseCSVFilesPath_Click()
+    'Browse for CSV Files folder path
+    Dim folderPath As String
+    
+    folderPath = BrowseForFolder("Select CSV Files Folder")
+    
+    If folderPath <> "" Then
+        wsSettings.Range("B4").Value = folderPath
+        Call LogAction("ChooseCSVFilesPath", "SUCCESS", "CSV path: " & folderPath)
+    End If
+End Sub
+
+Sub ChooseLogsPath_Click()
+    'Browse for Logs folder path
+    Dim folderPath As String
+    
+    folderPath = BrowseForFolder("Select Logs Folder")
+    
+    If folderPath <> "" Then
+        wsSettings.Range("B5").Value = folderPath
+        Call LogAction("ChooseLogsPath", "SUCCESS", "Logs path: " & folderPath)
+    End If
+End Sub
+
+Sub SaveSettings_Click()
+    'Save current settings
+    On Error GoTo ErrorHandler
+    
+    ' Validate paths exist
+    Dim exportPath As String
+    Dim csvPath As String
+    Dim logsPath As String
+    
+    exportPath = wsSettings.Range("B3").Value
+    csvPath = wsSettings.Range("B4").Value
+    logsPath = wsSettings.Range("B5").Value
+    
+    ' Check if paths are set
+    If exportPath = "" Or csvPath = "" Or logsPath = "" Then
+        MsgBox "Please set all folder paths before saving.", vbExclamation
+        Exit Sub
+    End If
+    
+    Call LogAction("SaveSettings", "SUCCESS", "Settings saved successfully")
+    MsgBox "✓ Settings saved successfully!", vbInformation
+    Exit Sub
+    
+ErrorHandler:
+    MsgBox "Error saving settings: " & Err.Description, vbCritical
+    Call LogAction("SaveSettings", "ERROR", Err.Description)
+End Sub
+
+Sub ResetDefaults_Click()
+    'Reset settings to default values
+    Dim response As VbMsgBoxResult
+    
+    response = MsgBox("Reset all settings to defaults?" & vbCrLf & vbCrLf & _
+                      "This will clear all custom paths.", vbQuestion + vbYesNo)
+    
+    If response = vbYes Then
+        wsSettings.Range("B2").Value = "ICE RINK"
+        wsSettings.Range("B3").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\Exports"
+        wsSettings.Range("B4").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\CSVs"
+        wsSettings.Range("B5").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\Logs"
+        wsSettings.Range("B6").Value = "Yes"
+        
+        Call LogAction("ResetDefaults", "SUCCESS", "Settings reset to defaults")
+        MsgBox "✓ Settings reset to defaults!", vbInformation
+    End If
+End Sub
