@@ -621,7 +621,7 @@ Sub ChooseExportPath_Click()
     folderPath = BrowseForFolder("Select Export Folder")
     
     If folderPath <> "" Then
-        wsSettings.Range("B3").Value = folderPath
+        wsSettings.Range("B4").Value = folderPath
         Call LogAction("ChooseExportPath", "SUCCESS", "Export path: " & folderPath)
     End If
 End Sub
@@ -633,7 +633,7 @@ Sub ChooseCSVFilesPath_Click()
     folderPath = BrowseForFolder("Select CSV Files Folder")
     
     If folderPath <> "" Then
-        wsSettings.Range("B4").Value = folderPath
+        wsSettings.Range("B6").Value = folderPath
         Call LogAction("ChooseCSVFilesPath", "SUCCESS", "CSV path: " & folderPath)
     End If
 End Sub
@@ -645,7 +645,7 @@ Sub ChooseLogsPath_Click()
     folderPath = BrowseForFolder("Select Logs Folder")
     
     If folderPath <> "" Then
-        wsSettings.Range("B5").Value = folderPath
+        wsSettings.Range("B8").Value = folderPath
         Call LogAction("ChooseLogsPath", "SUCCESS", "Logs path: " & folderPath)
     End If
 End Sub
@@ -659,9 +659,9 @@ Sub SaveSettings_Click()
     Dim csvPath As String
     Dim logsPath As String
     
-    exportPath = wsSettings.Range("B3").Value
-    csvPath = wsSettings.Range("B4").Value
-    logsPath = wsSettings.Range("B5").Value
+    exportPath = wsSettings.Range("B4").Value
+    csvPath = wsSettings.Range("B6").Value
+    logsPath = wsSettings.Range("B8").Value
     
     ' Check if paths are set
     If exportPath = "" Or csvPath = "" Or logsPath = "" Then
@@ -687,10 +687,10 @@ Sub ResetDefaults_Click()
     
     If response = vbYes Then
         wsSettings.Range("B2").Value = "ICE RINK"
-        wsSettings.Range("B3").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\Exports"
-        wsSettings.Range("B4").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\CSVs"
-        wsSettings.Range("B5").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\Logs"
-        wsSettings.Range("B6").Value = "Yes"
+        wsSettings.Range("B4").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\Exports"
+        wsSettings.Range("B6").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\CSVs"
+        wsSettings.Range("B8").Value = "D:\Excel VBA Automation\MCC_Integration_Project\ICE RINK\Logs"
+        wsSettings.Range("B10").Value = "Yes"
         
         Call LogAction("ResetDefaults", "SUCCESS", "Settings reset to defaults")
         MsgBox "✓ Settings reset to defaults!", vbInformation
