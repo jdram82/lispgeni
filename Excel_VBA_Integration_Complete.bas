@@ -580,66 +580,6 @@ End Sub
 ' BROWSE BUTTON FUNCTIONS (Settings Sheet)
 ' ============================================================================
 
-Sub BrowseMacroLibraryButton_Click()
-    'Browse for Macro Library folder path
-    Dim folderPath As String
-    
-    folderPath = BrowseForFolder("Select Macro Library Folder")
-    
-    If folderPath <> "" Then
-        wsSettings.Range("B2").Value = folderPath
-        Call LogAction("BrowseMacroLibrary", "SUCCESS", "Path set to: " & folderPath)
-    End If
-End Sub
-
-Sub BrowseExportPathButton_Click()
-    'Browse for Export folder path
-    Dim folderPath As String
-    
-    folderPath = BrowseForFolder("Select Export Folder")
-    
-    If folderPath <> "" Then
-        wsSettings.Range("B6").Value = folderPath
-        Call LogAction("BrowseExportPath", "SUCCESS", "Path set to: " & folderPath)
-    End If
-End Sub
-
-Sub BrowseCSVFilesPathButton_Click()
-    'Browse for CSV Files folder path
-    Dim folderPath As String
-    
-    folderPath = BrowseForFolder("Select CSV Files Folder")
-    
-    If folderPath <> "" Then
-        wsSettings.Range("B8").Value = folderPath
-        Call LogAction("BrowseCSVFilesPath", "SUCCESS", "Path set to: " & folderPath)
-    End If
-End Sub
-
-Sub BrowseLogsPathButton_Click()
-    'Browse for Logs folder path
-    Dim folderPath As String
-    
-    folderPath = BrowseForFolder("Select Logs Folder")
-    
-    If folderPath <> "" Then
-        wsSettings.Range("B10").Value = folderPath
-        Call LogAction("BrowseLogsPath", "SUCCESS", "Path set to: " & folderPath)
-    End If
-End Sub
-
-Sub BrowseBlockLibraryPathButton_Click()
-    'Browse for Block Library folder path
-    Dim folderPath As String
-    
-    folderPath = BrowseForFolder("Select Block Library Folder")
-    
-    If folderPath <> "" Then
-        wsSettings.Range("B12").Value = folderPath
-        Call LogAction("BrowseBlockLibraryPath", "SUCCESS", "Path set to: " & folderPath)
-    End If
-End Sub
-
 Function BrowseForFolder(dialogTitle As String) As String
     'Folder browser dialog
     Dim fldr As FileDialog
